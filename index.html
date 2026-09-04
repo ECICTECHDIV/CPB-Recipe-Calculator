@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPB Recipe Calculator</title>
+
+    <!-- PWA: 让浏览器知道这是一个可以「加入主画面」离线使用的工具 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <!-- iOS 目前不吃 manifest.json 里的设定,要另外加这几行才会有桌面图示、全萤幕开启 -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CPB计算器">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+            font-size: 14px;
+            color: #1f2937;
+        }
+        
+        /* Unified card style */
+        .section-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        @media (min-width: 640px) {
+            .section-card {
+                padding: 1.5rem;
+            }
+        }
+        
+        /* Unified section header */
+        .section-header {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+        
+        @media (min-width: 640px) {
+            .section-header {
+                font-size: 1.25rem;
+                margin-bottom: 1.25rem;
+            }
+        }
+        
+        /* Unified input style */
+        .input-field {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            color: #1f2937;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .input-field::placeholder {
+            color: #9ca3af;
+            font-weight: 400;
+        }
+        
+        @media (min-width: 640px) {
+            .input-field {
+                padding: 0.75rem 1rem;
+                font-size: 0.9375rem;
+            }
+        }
+        
+        /* Unified label style */
+        .input-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #374151;
+            letter-spacing: -0.01em;
+        }
+        
+        @media (min-width: 640px) {
+            .input-label {
+                font-size: 0.875rem;
+            }
+        }
+        
+        /* Unified info box */
+        .info-box {
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            border: 1px solid;
+            font-weight: 500;
+        }
+        
+        @media (min-width: 640px) {
+            .info-box {
+                padding: 0.875rem 1rem;
+            }
+        }
+        
+        /* Unified table styles */
+        table {
+            font-size: 0.875rem;
+        }
+        
+        .table-header {
+            background: #f9fafb;
+            font-weight: 600;
+            font-size: 0.8125rem;
+            color: #374151;
+            letter-spacing: 0.025em;
+        }
+        
+        @media (min-width: 640px) {
+            .table-header {
+                font-size: 0.875rem;
+            }
+        }
+        
+        table td {
+            font-size: 0.875rem;
+            color: #1f2937;
+        }
+        
+        table td input {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        table td.font-semibold {
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        /* Number display emphasis */
+        .number-display {
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+        }
+        .tooltip {
+            position: absolute;
+            display: none;
+            z-index: 1000;
+        }
+        .tooltip.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .tooltip {
+                position: fixed;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%);
+                width: 90vw !important;
+                max-width: 320px;
+            }
+            input[type="number"], input[type="text"], select {
+                font-size: 16px;
+            }
+            body {
+                font-size: 15px;
+            }
+            .section-card {
+                padding: 1rem;
+            }
+            .section-header {
+                font-size: 1.125rem;
+                margin-bottom: 0.875rem;
+            }
+            table {
+                font-size: 0.8125rem;
+            }
+            .input-field {
+                padding: 0.75rem;
+                font-size: 16px;
+            }
+            
+            /* Mobile table input optimization */
+            #dyeTableBody input[type="text"],
+            #dyeTableBody input[type="number"] {
+                font-size: 14px !important;
+                padding: 0.375rem !important;
+            }
+            
+            #dyeTableBody td:first-child {
+                width: 35% !important;
+            }
+            
+            #dyeTableBody input[type="text"] {
+                font-size: 13px !important;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        .hidden {
+            display: none;
+        }
+        /* NaOH浓度表 / 碱剂推荐依据 是唯读参考表,内容是短数字,但窄手机上一样会被压扁到看不清楚,
+           跟当初修过的碱剂配方表格是同一种问题,这里给个最小宽度让它改成横向捲动而不是硬挤 */
+        #naohTable table, #alkaliBasisTable table {
+            min-width: 400px;
+        }
+        input[type="number"], input[type="text"], select {
+            transition: all 0.2s ease;
+        }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        .section-card {
+            transition: box-shadow 0.2s ease;
+        }
+        .section-card:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        table th, table td {
+            border: 1px solid #e2e8f0;
+        }
+        table th:first-child, table td:first-child {
+            border-left: 1px solid #e2e8f0;
+        }
+        table thead tr:first-child th:first-child {
+            border-top-left-radius: 0.375rem;
+        }
+        table thead tr:first-child th:last-child {
+            border-top-right-radius: 0.375rem;
+        }
+        @media (min-width: 640px) {
+            .grid-responsive {
+                display: grid;
+                gap: 1rem;
+            }
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .print\:hidden {
+                display: none !important;
+            }
+            #workOrderSection {
+                page-break-inside: avoid;
+                box-shadow: none;
+                border: 2px solid #000;
+                max-width: 100%;
+                margin: 0;
+                padding: 20mm;
+            }
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+        }
+        
+/* Work Order Fixed Layout */
+        #workOrderSection {
+            background: white;
+            box-sizing: border-box;
+        }
+        
+/* Desktop: Fixed A4 width */
+@media (min-width: 769px) {
+    #workOrderSection {
+        width: 210mm;
+        max-width: 210mm;
+        min-height: 297mm;
+    }
+    
+    /* Desktop header layout - fixed width labels */
+    #workOrderSection .mb-4.p-4 .flex {
+        align-items: flex-start;
+    }
+    
+    #workOrderSection .mb-4.p-4 .w-20 {
+        width: 6.5rem;
+        flex-shrink: 0;
+    }
+    
+    #workOrderSection .mb-4.p-4 {
+        padding: 1rem;
+    }
+    
+    #workOrderSection .mb-4 .grid {
+        gap: 0.75rem 2rem;
+    }
+            
+            #workOrderSection .mb-4.p-4 .font-semibold {
+                word-break: break-word;
+                flex: 1;
+            }
+        }
+        
+        /* Mobile: Responsive width for viewing */
+        @media (max-width: 768px) {
+            #workOrderSection {
+                width: 100%;
+                max-width: 100%;
+                padding: 0.75rem !important;
+            }
+        }
+        
+        /* Work Order table vertical alignment fix */
+        #workOrderSection table {
+            border-collapse: collapse;
+        }
+        
+        #workOrderSection table td,
+        #workOrderSection table th {
+            vertical-align: middle !important;
+        }
+        
+        #workOrderSection table td > div {
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Remove extra spacing in table cells */
+        #workOrderSection table .text-xs {
+            line-height: 1.2 !important;
+            margin-top: 0.125rem !important;
+        }
+        
+        /* Fixed 3-column grid for solution summary */
+        #workOrderSection .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        
+        /* Ensure 3 columns stay in one row */
+        #workOrderSection .solution-grid > div {
+            min-width: 0;
+        }
+        
+/* Mobile optimization for work order */
+        @media (max-width: 768px) {
+            /* Work order title optimization */
+            #workOrderSection h2.text-base {
+                font-size: 0.8rem !important;
+                line-height: 1.2 !important;
+            }
+            
+            #workOrderSection .wo-title {
+                font-size: 0.8rem !important;
+            }
+            
+            /* Compact spacing */
+            #workOrderSection .mb-4,
+            #workOrderSection .mb-3 {
+                margin-bottom: 0.5rem !important;
+            }
+            
+            /* Header info compact for mobile */
+            #workOrderSection .p-4 {
+                padding: 0.5rem !important;
+            }
+            
+            #workOrderSection .text-sm {
+                font-size: 0.7rem !important;
+            }
+            
+            #workOrderSection .mb-4 .w-20 {
+                width: auto !important;
+                font-size: 0.6rem !important;
+            }
+            
+            #workOrderSection .mb-4 .font-semibold {
+                font-size: 0.65rem !important;
+            }
+            
+            #workOrderSection .gap-x-6 {
+                gap: 0.25rem 0.5rem !important;
+            }
+            
+            /* Keep 3-column layout even on mobile */
+            #workOrderSection .solution-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.375rem;
+            }
+            
+            #workOrderSection .solution-grid > div {
+                padding: 0.375rem !important;
+            }
+            
+            #workOrderSection .solution-grid .text-sm {
+                font-size: 0.7rem !important;
+            }
+            
+            /* Recipe header compact and unified */
+            #workOrderSection h3 {
+                font-size: 0.7rem !important;
+                line-height: 1.3 !important;
+            }
+            
+            #workOrderSection h3 span {
+                font-size: 0.65rem !important;
+            }
+            
+            /* Table optimization - unified font size */
+            #workOrderSection table {
+                font-size: 0.65rem !important;
+            }
+            
+            #workOrderSection table th {
+                padding: 0.3rem 0.2rem !important;
+                vertical-align: middle !important;
+                line-height: 1.2 !important;
+                font-size: 0.65rem !important;
+            }
+            
+            #workOrderSection table td {
+                padding: 0.3rem 0.2rem !important;
+                vertical-align: middle !important;
+                line-height: 1.2 !important;
+                font-size: 0.65rem !important;
+            }
+            
+            #workOrderSection table td > div {
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1.2 !important;
+                font-size: 0.65rem !important;
+            }
+            
+            #workOrderSection table .text-xs {
+                font-size: 0.6rem !important;
+            }
+            
+            /* Unified font for all table content */
+            #workOrderSection table td,
+            #workOrderSection table th,
+            #workOrderSection table td div,
+            #workOrderSection table td span {
+                font-size: 0.65rem !important;
+            }
+            
+            /* Remove bold from alkali table for mobile */
+            #woAlkaliTable .font-medium {
+                font-weight: normal !important;
+            }
+            
+            #woAlkaliTable .text-sm {
+                font-weight: normal !important;
+            }
+            
+            /* Allow line breaks in alkali recipe text */
+            #woAlkaliTable td > div {
+                white-space: normal !important;
+                word-break: break-word !important;
+            }
+        }
+        
+        /* Language Toggle Button */
+        .lang-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            color: #3b82f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .lang-toggle:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen py-4 sm:py-8">
+    <!-- Language Toggle Button -->
+    <button onclick="toggleLanguage()" class="lang-toggle print:hidden">
+        <span id="langToggleText">English</span>
+    </button>
+
+    <div class="w-full max-w-7xl mx-auto px-3 sm:px-6">
+        <div class="bg-white rounded-xl shadow-xl p-4 sm:p-8">
+            <!-- Header -->
+            <div class="flex items-center gap-3 sm:gap-4 mb-6 sm:mb-8 pb-4 sm:pb-6 border-b-2 border-blue-100">
+                <div class="bg-blue-100 p-2 sm:p-3 rounded-lg">
+                    <svg class="w-7 h-7 sm:w-9 sm:h-9 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-3xl font-bold text-gray-800" data-i18n="title">CPB染色配方计算器</h1>
+                    <p class="text-xs sm:text-sm text-gray-500 mt-1" data-i18n="subtitle">冷轧堆染色工艺</p>
+                </div>
+            </div>
+
+            <!-- Load Recipe Section -->
+            <div class="section-card mb-5 sm:mb-6 bg-gradient-to-r from-teal-50 to-cyan-50">
+                <div class="flex items-center gap-3 mb-3">
+                    <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800" data-i18n="loadRecipe">加载已保存配方</h2>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <select id="savedRecipes" onchange="loadRecipe()" class="flex-1 input-field bg-white">
+                        <option value="" data-i18n="selectRecipe">-- 选择已保存的配方 --</option>
+                    </select>
+                    <button onclick="deleteRecipe()" class="px-4 py-2.5 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        <span class="hidden sm:inline" data-i18n="delete">删除</span>
+                    </button>
+                </div>
+            </div>
+
+           <!-- Customer Information -->
+<div class="section-card mb-5 sm:mb-6">
+    <h2 class="section-header">
+        <span class="w-1 h-5 bg-purple-500 rounded-full"></span>
+        <span data-i18n="orderInfo">订单信息</span>
+    </h2>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+        <div>
+            <label class="input-label" data-i18n="customer">客户</label>
+            <input type="text" id="customerName" data-i18n-placeholder="customerPlaceholder" placeholder="客户名称" oninput="updateWorkOrder()" class="input-field">
+        </div>
+        <div>
+            <label class="input-label" data-i18n="colorOrder">颜色/订单号</label>
+            <input type="text" id="colorOrder" data-i18n-placeholder="colorOrderPlaceholder" placeholder="颜色名称或订单号" oninput="updateWorkOrder()" class="input-field">
+        </div>
+        <div>
+            <label class="input-label" data-i18n="fabricType">布料类型</label>
+            <input type="text" id="fabricType" data-i18n-placeholder="fabricTypePlaceholder" placeholder="例如: 100% 棉" oninput="updateWorkOrder()" class="input-field">
+        </div>
+    </div>
+</div>
+
+            <!-- Fabric Information -->
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-yellow-500 rounded-full"></span>
+                    <span data-i18n="fabricInfo">布料信息</span>
+                </h2>
+                
+                <div class="mb-3 sm:mb-4">
+                    <label class="input-label" data-i18n="calcMode">计算模式</label>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+                        <label class="flex items-center text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                            <input type="radio" name="fabricMode" value="direct" checked onchange="updateFabricMode()" class="mr-2 w-4 h-4">
+                            <span data-i18n="directInput">直接输入 (kg)</span>
+                        </label>
+                        <label class="flex items-center text-sm cursor-pointer hover:text-blue-600 transition-colors">
+                            <input type="radio" name="fabricMode" value="calculate" onchange="updateFabricMode()" class="mr-2 w-4 h-4">
+                            <span data-i18n="calculateInput">计算 (布重 × 长度)</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div id="directMode">
+                        <label class="input-label" data-i18n="totalFabric">总布量 (kg)</label>
+                        <input type="number" id="fabricQuantity" value="" placeholder="0" min="0" oninput="calculate()" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="pickup">轧吸率 (%)</label>
+                        <input type="number" id="pickUp" value="" placeholder="0" min="0" max="150" oninput="calculate()" class="input-field">
+                    </div>
+                </div>
+                
+                <div id="calculateMode" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4">
+                    <div>
+                        <label class="input-label" data-i18n="fabricWeight">布重 (g/m)</label>
+                        <input type="number" id="fabricWeight" value="" placeholder="0" min="0" oninput="calculate()" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="fabricLength">长度 (m)</label>
+                        <input type="number" id="fabricLength" value="" placeholder="0" min="0" oninput="calculate()" class="input-field">
+                    </div>
+                    <div class="col-span-1 sm:col-span-2 info-box bg-blue-50 border-blue-200">
+                        <span class="font-semibold text-gray-700" data-i18n="totalFabricCalc">总布量: </span>
+                        <span id="calculatedFabric" class="text-lg font-bold text-blue-600">0.00 kg</span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="input-label" data-i18n="batchTime">堆置时间 (小时)</label>
+                    <input type="number" id="batchTime" value="20" min="1" step="1" oninput="updateWorkOrder()" class="input-field">
+                </div>
+            </div>
+
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                    <span data-i18n="alkaliMethodSection">碱剂方法设定</span>
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                    <div>
+                        <label class="input-label" data-i18n="alkaliMethod">碱剂方法</label>
+                        <select id="alkaliMethod" onchange="updateAlkaliMethod()" class="input-field cursor-pointer">
+                            <option value="silicate-free" data-i18n="methodA">A. 无硅酸盐法</option>
+                            <option value="sodium-silicate" data-i18n="methodB">B. 硅酸钠法</option>
+                            <option value="modified-silicate" data-i18n="methodC">C. 改性硅酸钠法</option>
+                            <option value="tropical-region" data-i18n="methodD">D. 无硅酸盐法(热带地区)</option>
+                        </select>
+                    </div>
+                    <!-- 只有选到方法 A 时才有意义,所以跟 methodASelect 一起被 updateAlkaliMethod() 切换显示/隐藏 -->
+                    <div id="naohTypeASlot">
+                        <label class="input-label" data-i18n="naohType">NaOH类型</label>
+                        <select id="alkaliTypeA" onchange="handleAlkaliTypeChange('A')" class="input-field">
+                            <option value="38">NaOH 38°Bé (32.5% w/w)</option>
+                            <option value="50">NaOH 50°Bé (50.1% w/w)</option>
+                            <option value="flakes" data-i18n="naohFlakes">NaOH 片碱 (100% w/w)</option>
+                            <option value="custom" data-i18n="custom">自定义</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Method A: Silicate Free -->
+                <div id="methodASelect">
+                    <div id="customInputA" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeA" min="1" max="50" placeholder="38" oninput="updateCustomNaOH('A')" class="input-field">
+                        </div>
+                        <div id="customInfoA" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoA" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlA" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentA" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningA" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method B: Sodium Silicate -->
+                <div id="methodBSelect" class="hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="input-label" data-i18n="silicateConc">硅酸钠浓度</label>
+                            <select id="silicateConc" onchange="calculate()" class="input-field">
+                                <option value="37-40">37-40°Bé (130 g/l)</option>
+                                <option value="40-42">40-42°Bé (110 g/l)</option>
+                                <option value="48-50" selected>48-50°Bé (100 g/l)</option>
+                                <option value="58-60">58-60°Bé (90 g/l)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="input-label" data-i18n="naohConc">NaOH浓度</label>
+                            <select id="naohConcB" onchange="handleAlkaliTypeChange('B')" class="input-field">
+                                <option value="38" selected>38°Bé (32.5% w/w)</option>
+                                <option value="50">50°Bé (50.1% w/w)</option>
+                                <option value="flakes" data-i18n="naohFlakes">片碱 (100% w/w)</option>
+                                <option value="custom" data-i18n="custom">自定义</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="customInputB" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeB" min="1" max="50" placeholder="38" oninput="updateCustomNaOH('B')" class="input-field">
+                        </div>
+                        <div id="customInfoB" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoB" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlB" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentB" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningB" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method C: Modified Sodium Silicate -->
+                <div id="methodCSelect" class="hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="input-label" data-i18n="silicateConc">硅酸钠浓度</label>
+                            <select id="silicateConcC" onchange="calculate()" class="input-field">
+                                <option value="37-40">37-40°Bé (65 g/l)</option>
+                                <option value="40-42">40-42°Bé (55 g/l)</option>
+                                <option value="48-50" selected>48-50°Bé (50 g/l)</option>
+                                <option value="58-60">58-60°Bé (45 g/l)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="input-label" data-i18n="naohConc">NaOH浓度</label>
+                            <select id="naohConcC" onchange="handleAlkaliTypeChange('C')" class="input-field">
+                                <option value="38" selected>38°Bé (32.5% w/w)</option>
+                                <option value="50">50°Bé (50.1% w/w)</option>
+                                <option value="flakes" data-i18n="naohFlakes">片碱 (100% w/w)</option>
+                                <option value="custom" data-i18n="custom">自定义</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="customInputC" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeC" min="1" max="50" placeholder="38" oninput="updateCustomNaOH('C')" class="input-field">
+                        </div>
+                        <div id="customInfoC" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoC" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlC" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentC" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningC" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method D: Tropical Region -->
+                <div id="methodDSelect" class="hidden">
+                    <div class="mb-4">
+                        <label class="input-label" data-i18n="naohConc">NaOH浓度</label>
+                        <select id="naohConcD" onchange="handleAlkaliTypeChange('D')" class="input-field">
+                            <option value="50" selected>50°Bé (50.1% w/w)</option>
+                            <option value="38">38°Bé (32.5% w/w)</option>
+                            <option value="flakes" data-i18n="naohFlakes">片碱 (100% w/w)</option>
+                            <option value="custom" data-i18n="custom">自定义</option>
+                        </select>
+                    </div>
+                    
+                    <div id="customInputD" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeD" min="1" max="50" placeholder="50" oninput="updateCustomNaOH('D')" class="input-field">
+                        </div>
+                        <div id="customInfoD" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoD" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlD" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentD" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningD" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- NaOH Reference Table -->
+            <div class="section-card mt-5 sm:mt-6">
+                <!-- 碱剂推荐依据:跟着目前选的方法动态换内容,预设收合,避免占用版面 -->
+                <button onclick="toggleAlkaliBasisTable()" class="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
+                    <h2 class="section-header mb-0">
+                        <span class="w-1 h-5 bg-teal-500 rounded-full"></span>
+                        <span data-i18n="alkaliBasis">碱剂推荐依据</span>
+                    </h2>
+                    <svg id="alkaliBasisIcon" class="w-6 h-6 transform transition-transform text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="alkaliBasisTable" class="hidden mt-3 overflow-x-auto">
+                    <!-- Will be populated by JavaScript, based on the currently selected alkali method -->
+                </div>
+
+                <hr class="my-4 border-gray-200">
+
+                <button onclick="toggleTable()" class="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
+                    <h2 class="section-header mb-0">
+                        <span class="w-1 h-5 bg-gray-500 rounded-full"></span>
+                        <span data-i18n="naohTable">NaOH浓度表</span>
+                    </h2>
+                    <svg id="tableIcon" class="w-6 h-6 transform transition-transform text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <div id="naohTable" class="hidden mt-3 overflow-x-auto">
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="border px-2 py-1" data-i18n="baume">波美度 (°Bé)</th>
+                                <th class="border px-2 py-1" data-i18n="specWeight">比重 (ρ)</th>
+                                <th class="border px-2 py-1" data-i18n="naohContent">NaOH含量 (g/l)</th>
+                                <th class="border px-2 py-1" data-i18n="naohPercent">NaOH % (w/w)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="border px-2 py-1 text-center">1</td><td class="border px-2 py-1 text-center">1.007</td><td class="border px-2 py-1 text-center">6.0</td><td class="border px-2 py-1 text-center">0.59</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">2</td><td class="border px-2 py-1 text-center">1.014</td><td class="border px-2 py-1 text-center">12.0</td><td class="border px-2 py-1 text-center">1.18</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">3</td><td class="border px-2 py-1 text-center">1.022</td><td class="border px-2 py-1 text-center">18.9</td><td class="border px-2 py-1 text-center">1.85</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">4</td><td class="border px-2 py-1 text-center">1.029</td><td class="border px-2 py-1 text-center">25.7</td><td class="border px-2 py-1 text-center">2.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">5</td><td class="border px-2 py-1 text-center">1.036</td><td class="border px-2 py-1 text-center">32.6</td><td class="border px-2 py-1 text-center">3.15</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">6</td><td class="border px-2 py-1 text-center">1.045</td><td class="border px-2 py-1 text-center">39.6</td><td class="border px-2 py-1 text-center">3.79</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">7</td><td class="border px-2 py-1 text-center">1.052</td><td class="border px-2 py-1 text-center">47.3</td><td class="border px-2 py-1 text-center">4.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">8</td><td class="border px-2 py-1 text-center">1.060</td><td class="border px-2 py-1 text-center">55.0</td><td class="border px-2 py-1 text-center">5.20</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">9</td><td class="border px-2 py-1 text-center">1.067</td><td class="border px-2 py-1 text-center">62.5</td><td class="border px-2 py-1 text-center">5.86</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">10</td><td class="border px-2 py-1 text-center">1.075</td><td class="border px-2 py-1 text-center">70.7</td><td class="border px-2 py-1 text-center">6.58</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">11</td><td class="border px-2 py-1 text-center">1.083</td><td class="border px-2 py-1 text-center">79.1</td><td class="border px-2 py-1 text-center">7.30</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">12</td><td class="border px-2 py-1 text-center">1.091</td><td class="border px-2 py-1 text-center">88.0</td><td class="border px-2 py-1 text-center">8.07</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">13</td><td class="border px-2 py-1 text-center">1.100</td><td class="border px-2 py-1 text-center">96.6</td><td class="border px-2 py-1 text-center">8.78</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">14</td><td class="border px-2 py-1 text-center">1.108</td><td class="border px-2 py-1 text-center">105.3</td><td class="border px-2 py-1 text-center">9.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">15</td><td class="border px-2 py-1 text-center">1.116</td><td class="border px-2 py-1 text-center">114.9</td><td class="border px-2 py-1 text-center">10.30</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">16</td><td class="border px-2 py-1 text-center">1.125</td><td class="border px-2 py-1 text-center">124.4</td><td class="border px-2 py-1 text-center">11.06</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">17</td><td class="border px-2 py-1 text-center">1.134</td><td class="border px-2 py-1 text-center">134.0</td><td class="border px-2 py-1 text-center">11.84</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">18</td><td class="border px-2 py-1 text-center">1.142</td><td class="border px-2 py-1 text-center">145.0</td><td class="border px-2 py-1 text-center">12.60</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">19</td><td class="border px-2 py-1 text-center">1.152</td><td class="border px-2 py-1 text-center">155.5</td><td class="border px-2 py-1 text-center">13.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">20</td><td class="border px-2 py-1 text-center">1.161</td><td class="border px-2 py-1 text-center">166.7</td><td class="border px-2 py-1 text-center">14.35</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">21</td><td class="border px-2 py-1 text-center">1.171</td><td class="border px-2 py-1 text-center">177.4</td><td class="border px-2 py-1 text-center">15.15</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">22</td><td class="border px-2 py-1 text-center">1.180</td><td class="border px-2 py-1 text-center">188.8</td><td class="border px-2 py-1 text-center">16.00</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">23</td><td class="border px-2 py-1 text-center">1.190</td><td class="border px-2 py-1 text-center">201.2</td><td class="border px-2 py-1 text-center">16.91</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">24</td><td class="border px-2 py-1 text-center">1.200</td><td class="border px-2 py-1 text-center">213.7</td><td class="border px-2 py-1 text-center">17.81</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">25</td><td class="border px-2 py-1 text-center">1.210</td><td class="border px-2 py-1 text-center">226.4</td><td class="border px-2 py-1 text-center">18.71</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">26</td><td class="border px-2 py-1 text-center">1.220</td><td class="border px-2 py-1 text-center">239.7</td><td class="border px-2 py-1 text-center">19.65</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">27</td><td class="border px-2 py-1 text-center">1.231</td><td class="border px-2 py-1 text-center">253.6</td><td class="border px-2 py-1 text-center">20.60</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">28</td><td class="border px-2 py-1 text-center">1.241</td><td class="border px-2 py-1 text-center">267.4</td><td class="border px-2 py-1 text-center">21.55</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">29</td><td class="border px-2 py-1 text-center">1.252</td><td class="border px-2 py-1 text-center">281.7</td><td class="border px-2 py-1 text-center">22.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">30</td><td class="border px-2 py-1 text-center">1.263</td><td class="border px-2 py-1 text-center">296.8</td><td class="border px-2 py-1 text-center">23.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">31</td><td class="border px-2 py-1 text-center">1.274</td><td class="border px-2 py-1 text-center">311.9</td><td class="border px-2 py-1 text-center">24.48</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">32</td><td class="border px-2 py-1 text-center">1.285</td><td class="border px-2 py-1 text-center">327.7</td><td class="border px-2 py-1 text-center">25.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">33</td><td class="border px-2 py-1 text-center">1.297</td><td class="border px-2 py-1 text-center">344.7</td><td class="border px-2 py-1 text-center">26.58</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">34</td><td class="border px-2 py-1 text-center">1.308</td><td class="border px-2 py-1 text-center">361.7</td><td class="border px-2 py-1 text-center">27.65</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">35</td><td class="border px-2 py-1 text-center">1.320</td><td class="border px-2 py-1 text-center">380.6</td><td class="border px-2 py-1 text-center">28.83</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">36</td><td class="border px-2 py-1 text-center">1.332</td><td class="border px-2 py-1 text-center">399.6</td><td class="border px-2 py-1 text-center">30.00</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">37</td><td class="border px-2 py-1 text-center">1.345</td><td class="border px-2 py-1 text-center">419.6</td><td class="border px-2 py-1 text-center">31.20</td></tr>
+                            <tr class="bg-yellow-50"><td class="border px-2 py-1 text-center font-bold">38</td><td class="border px-2 py-1 text-center font-bold">1.357</td><td class="border px-2 py-1 text-center font-bold">441.0</td><td class="border px-2 py-1 text-center font-bold">32.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">39</td><td class="border px-2 py-1 text-center">1.370</td><td class="border px-2 py-1 text-center">462.1</td><td class="border px-2 py-1 text-center">33.73</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">40</td><td class="border px-2 py-1 text-center">1.383</td><td class="border px-2 py-1 text-center">484.1</td><td class="border px-2 py-1 text-center">35.00</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">41</td><td class="border px-2 py-1 text-center">1.397</td><td class="border px-2 py-1 text-center">507.9</td><td class="border px-2 py-1 text-center">36.36</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">42</td><td class="border px-2 py-1 text-center">1.410</td><td class="border px-2 py-1 text-center">530.9</td><td class="border px-2 py-1 text-center">37.65</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">43</td><td class="border px-2 py-1 text-center">1.424</td><td class="border px-2 py-1 text-center">556.2</td><td class="border px-2 py-1 text-center">39.06</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">44</td><td class="border px-2 py-1 text-center">1.438</td><td class="border px-2 py-1 text-center">582.0</td><td class="border px-2 py-1 text-center">40.47</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">45</td><td class="border px-2 py-1 text-center">1.453</td><td class="border px-2 py-1 text-center">610.6</td><td class="border px-2 py-1 text-center">42.02</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">46</td><td class="border px-2 py-1 text-center">1.468</td><td class="border px-2 py-1 text-center">639.8</td><td class="border px-2 py-1 text-center">43.58</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">47</td><td class="border px-2 py-1 text-center">1.483</td><td class="border px-2 py-1 text-center">669.7</td><td class="border px-2 py-1 text-center">45.16</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">48</td><td class="border px-2 py-1 text-center">1.498</td><td class="border px-2 py-1 text-center">700.0</td><td class="border px-2 py-1 text-center">46.73</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">49</td><td class="border px-2 py-1 text-center">1.514</td><td class="border px-2 py-1 text-center">732.9</td><td class="border px-2 py-1 text-center">48.41</td></tr>
+                            <tr class="bg-yellow-50"><td class="border px-2 py-1 text-center font-bold">50</td><td class="border px-2 py-1 text-center font-bold">1.530</td><td class="border px-2 py-1 text-center font-bold">766.5</td><td class="border px-2 py-1 text-center font-bold">50.10</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div><!-- 补上「碱剂体系」外层卡片自己的收尾标签(先前重构时漏掉了,导致后面所有区块都被误包进这张卡片里) -->
+
+            <!-- 布量/轧吸率没有效值之前,先不显示后面的配方与计算内容(改成先提示,不要一路显示一堆 0.00) -->
+            <div id="fabricInputPrompt" class="section-card mb-5 sm:mb-6 bg-amber-50 border-2 border-amber-300 text-center py-8">
+                <svg class="w-10 h-10 text-amber-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="text-amber-800 font-semibold" data-i18n="fabricInputPrompt">请先在上方填写「总布量」与「轧吸率」,才会显示后续的配方与计算内容</p>
+            </div>
+
+            <div id="planSection" class="hidden">
+
+            <!-- Solution Preparation -->
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-cyan-500 rounded-full"></span>
+                    <span data-i18n="solutionPrep">溶液配制</span>
+                </h2>
+                
+                <div class="mb-4 info-box bg-green-50 border-green-200 text-sm">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="font-semibold text-green-800">
+                            <span data-i18n="theoreticalSolution">最低需求溶液量: </span><span id="theoreticalSolution" class="text-base font-bold text-green-700">1000.00 ltr</span>
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span class="text-gray-600">
+                            <span class="font-semibold" data-i18n="dosingRatio">配比 4:1 → </span>
+                            <span data-i18n="dye">染料: </span><span id="theoreticalDyeSol" class="font-bold text-green-700">800.00 ltr</span>
+                            <span class="mx-1">|</span>
+                            <span data-i18n="alkali">碱剂: </span><span id="theoreticalAlkaliSol" class="font-bold text-green-700">200.00 ltr</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="input-label" data-i18n="dyeSolutionPrepare">配制染料溶液 (ltr)</label>
+                        <input type="number" id="dyeSolution" value="850" min="0" oninput="this.dataset.userModified='true'; calculate();" class="input-field">
+                        <div id="dyeDifference" class="mt-2 info-box bg-blue-50 border-blue-200">
+                            <span class="font-semibold text-blue-800" data-i18n="vsTheoretical">较最低需求: </span>
+                            <span class="text-sm font-bold text-blue-700">+50.00 ltr</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="input-label" data-i18n="alkaliSolutionPrepare">配制碱液 (ltr)</label>
+                        <input type="number" id="alkaliSolution" value="250" min="0" oninput="this.dataset.userModified='true'; calculate();" class="input-field">
+                        <div id="alkaliDifference" class="mt-2 info-box bg-green-50 border-green-200">
+                            <span class="font-semibold text-green-800" data-i18n="vsTheoretical">较最低需求: </span>
+                            <span class="text-sm font-bold text-green-700">+50.00 ltr</span>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- Alkali Method Selection (moved up: 决定方法与 NaOH 类型属于前期设置,填染料配方前先定案) -->
+            <!-- Dye Solution Recipe -->
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-blue-500 rounded-full"></span>
+                    <span data-i18n="dyeRecipe">染料溶液配方</span>
+                </h2>
+                <div class="mb-3 info-box bg-blue-50 border-blue-200 font-semibold">
+                    <span data-i18n="prepareInDye">配制染料溶液: </span>
+                    <span id="dyeSolutionLabel" class="text-blue-700">840.00</span> ltr
+                </div>
+                <div class="overflow-x-auto -mx-3 sm:mx-0">
+                    <table class="w-full border-collapse min-w-full">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left" style="width: 40%;" data-i18n="item">项目</th>
+                                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-amber-50" style="width: 30%;" data-i18n="recipeGl">配方 (g/l)</th>
+                                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-emerald-50" style="width: 30%;" data-i18n="bulkG">用量 (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dyeTableBody">
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" value="黄色" data-i18n-value="dyeDefault1" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" value="红色" data-i18n-value="dyeDefault2" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" value="蓝色" data-i18n-value="dyeDefault3" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" data-i18n-placeholder="dyePlaceholder" placeholder="染料" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr class="table-header font-bold bg-gray-100">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2.5"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2.5 bg-amber-100" style="white-space: nowrap;"><span style="font-size: 0.875rem;" data-i18n="total">总计:</span> <span id="totalDyeConc" class="number-display">0.00</span> <span style="font-size: 0.875rem;">g/l</span></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2.5 bg-emerald-100"></td>
+                            </tr>
+                            <tr class="table-header bg-blue-50">
+                                <td colspan="3" class="border border-gray-200 px-3 sm:px-4 py-2.5 font-semibold text-gray-700" data-i18n="auxiliaries">助剂</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" value="润湿剂" data-i18n-value="auxDefault1" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" step="0.1" min="0" oninput="calculate()" class="aux-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right aux-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" data-i18n-placeholder="auxPlaceholder" placeholder="助剂" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" step="0.1" min="0" oninput="calculate()" class="aux-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right aux-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" data-i18n-placeholder="auxPlaceholder" placeholder="助剂" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" step="0.1" min="0" oninput="calculate()" class="aux-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right aux-quantity">0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Alkali System -->
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                    <span data-i18n="alkaliSystem">碱剂体系</span>
+                </h2>
+                
+                <!-- 三段资讯合并成一行,预设分开显示很占空间;
+                     颜色仍分段区隔(绿/靛/蓝),用「|」分隔,窄屏自动换行不会溢出 -->
+                <div class="mb-4 info-box bg-gray-50 border-gray-300 text-sm">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="font-semibold text-green-700">
+                            <span data-i18n="prepareInAlkali">配制碱液: </span><span id="alkaliSolutionLabel">210.00</span> ltr
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span id="currentMethodBanner" class="font-semibold text-indigo-800"></span>
+                        <span class="text-gray-300">|</span>
+                        <span class="font-semibold text-blue-700">
+                            <span data-i18n="basedOnDye">基于染料: </span><span id="dyeConcCurrent">0.00</span> g/l
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 染料还没填(总浓度为 0)时,碱剂建议值毫无意义(只是默认落在 ≤10g/l 那个级距),
+                     不该让使用者误以为那是「已经算好」的建议——比照布量/轧吸率的做法,先给提示 -->
+                <div id="dyeInputPrompt" class="hidden text-center py-6 text-gray-500 text-sm">
+                    <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p data-i18n="dyeInputPrompt">请先在上方「染料溶液配方」填写染料用量,才会显示碱剂建议配方</p>
+                </div>
+
+                <div id="alkaliTableWrapper">
+                <!-- Alkali Table -->
+<div class="overflow-x-auto -mx-3 sm:mx-0">
+    <table class="w-full border-collapse" style="min-width: 480px;">
+        <thead>
+            <tr class="table-header">
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left" style="width: 30%;" data-i18n="alkali">碱剂</th>
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-blue-50" style="width: 25%;" data-i18n="suggested">建議配方</th>
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-amber-50" style="width: 25%;" data-i18n="actual">實際配方</th>
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-emerald-50" style="width: 20%;" data-i18n="bulkG">用量 (g)</th>
+            </tr>
+        </thead>
+        <tbody id="alkaliTableBody">
+            <!-- Will be populated by JavaScript -->
+        </tbody>
+    </table>
+</div>
+                </div>
+
+            </div><!-- Complete Work Order Summary -->
+            <div id="workOrderSection" class="section-card mt-5 sm:mt-6 p-6 bg-white rounded-xl border-2 border-green-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-green-500 rounded-full print:hidden hidden sm:inline-block"></span>
+                        <span class="wo-title" data-i18n="workOrder">CPB生产工作单</span>
+                    </h2>
+                    <button onclick="copyWorkOrderAsImage(event)" class="px-2 sm:px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 print:hidden flex-shrink-0">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                        <span class="hidden sm:inline" data-i18n="download">下载</span>
+                    </button>
+                </div>
+
+<!-- Work Order Header -->
+<div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-300">
+    <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="date">日期:</span>
+            <span id="woDate" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="qty">数量:</span>
+            <span id="woFabric" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="customer">客户:</span>
+            <span id="woCustomer" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="pickupLabel">轧吸率:</span>
+            <span id="woPickup" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="colorOrder">颜色/订单:</span>
+            <span id="woColorOrder" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="alkali">碱剂:</span>
+            <span id="woMethod" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="fabricLabel">布料:</span>
+            <span id="woFabricType" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="batchTimeLabel">堆置时间:</span>
+            <span id="woBatchTime" class="font-semibold">-</span>
+        </div>
+    </div>
+</div>
+
+                <!-- Solution Summary - Fixed 3-column grid -->
+                <div class="mb-3 sm:mb-4 solution-grid">
+                    <div class="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200 text-center">
+                        <div class="text-[10px] sm:text-xs text-gray-600 mb-1" data-i18n="requiredSol">最低需求量</div>
+                        <div id="woTotalSol" class="text-sm sm:text-lg font-bold text-blue-600">-</div>
+                        <div id="woTheoreticalNote" class="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">-</div>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-indigo-50 rounded-lg border border-indigo-200 text-center">
+                        <div class="text-[10px] sm:text-xs text-gray-600 mb-1" data-i18n="prepareDye">配制染料溶液</div>
+                        <div id="woDyeSol" class="text-sm sm:text-lg font-bold text-indigo-600">-</div>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200 text-center">
+                        <div class="text-[10px] sm:text-xs text-gray-600 mb-1" data-i18n="prepareAlkali">配制碱液</div>
+                        <div id="woAlkaliSol" class="text-sm sm:text-lg font-bold text-green-600">-</div>
+                    </div>
+                </div>
+
+                <!-- Dye Recipe Table - Fixed 4 rows -->
+                <div class="mb-3 sm:mb-4">
+                    <h3 class="font-bold text-sm sm:text-base mb-1.5 sm:mb-2 text-gray-700 flex items-center justify-between">
+                        <span data-i18n="dyeSolRecipe">染料溶液配方</span>
+                        <span class="text-xs sm:text-sm font-semibold text-indigo-600"><span data-i18n="prepare">配制:</span> <span id="woDyeSolAmount">840.00</span> ltr</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-blue-100">
+                                    <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 40%;" data-i18n="item">项目</th>
+                                    <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="recipeGl">配方 (g/l)</th>
+                                    <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="quantity">用量 (g)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="woDyeTable">
+                                <!-- Fixed 4 dye rows + total + 3 auxiliary rows will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Alkali Recipe Table -->
+                <div>
+                    <h3 class="font-bold text-base mb-2 text-gray-700 flex items-center justify-between">
+                        <span data-i18n="alkaliSolRecipe">碱液配方</span>
+                        <span class="text-sm font-semibold text-green-600"><span data-i18n="prepare">配制:</span> <span id="woAlkaliSolAmount">210.00</span> ltr</span>
+                    </h3>
+                    <!-- 建议配方改成表格上方的附注,方便日后回溯比对,但不占主要版面——
+                         工卡是给产线执行的文件,重点是「要秤多少」,不是「系统当初建议多少」 -->
+                    <p id="woAlkaliSuggestedNote" class="text-xs text-gray-500 mb-1.5"></p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+    <tr class="bg-green-100">
+        <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 40%;" data-i18n="item">項目</th>
+        <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="recipeGl">配方 (g/l)</th>
+        <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="quantity">用量 (g)</th>
+    </tr>
+</thead>
+                            <tbody id="woAlkaliTable">
+                                <!-- Will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Recipe Section -->
+            <div class="section-card mt-5 sm:mt-6 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300">
+                <div class="flex items-center gap-3 mb-3">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                    </svg>
+                    <h2 class="text-base sm:text-lg font-bold text-gray-800" data-i18n="saveRecipe">保存当前配方</h2>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" id="recipeName" data-i18n-placeholder="saveRecipePlaceholder" placeholder="输入配方名称 (例如: 红色-棉布-客户A)" class="flex-1 input-field bg-white">
+                    <button onclick="saveRecipe()" class="px-6 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <span data-i18n="saveButton">保存配方</span>
+                    </button>
+                </div>
+            </div>
+            </div><!-- 关闭 planSection -->
+        </div>
+    </div>
+
+    <!-- Load html2canvas from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script>
+        // ========== 语言系统 ==========
+        let currentLang = 'zh';
+        
+        const translations = {
+            zh: {
+                title: 'CPB染色配方计算器',
+                subtitle: '冷轧堆染色工艺',
+                loadRecipe: '加载已保存配方',
+                selectRecipe: '-- 选择已保存的配方 --',
+                delete: '删除',
+                orderInfo: '订单信息',
+                customer: '客户',
+                customerPlaceholder: '客户名称',
+                colorOrder: '颜色/订单号',
+                colorOrderPlaceholder: '颜色名称或订单号',
+                fabricType: '布料类型',
+                fabricTypePlaceholder: '例如: 100% 棉',
+                fabricInputPrompt: '请先在上方填写「总布量」与「轧吸率」,才会显示后续的配方与计算内容',
+                dyeInputPrompt: '请先在上方「染料溶液配方」填写染料用量,才会显示碱剂建议配方',
+                batchTime: '堆置时间 (小时)',
+                fabricInfo: '布料信息',
+                calcMode: '计算模式',
+                directInput: '直接输入 (kg)',
+                calculateInput: '计算 (布重 × 长度)',
+                totalFabric: '总布量 (kg)',
+                fabricWeight: '布重 (g/m)',
+                fabricLength: '长度 (m)',
+                totalFabricCalc: '总布量: ',
+                pickup: '轧吸率 (%)',
+                solutionPrep: '溶液配制',
+                theoreticalSolution: '最低需求溶液量: ',
+                dosingRatio: '配比 4:1 → ',
+                dye: '染料: ',
+                alkali: '碱剂: ',
+                dyeSolutionPrepare: '配制染料溶液 (ltr)',
+                alkaliSolutionPrepare: '配制碱液 (ltr)',
+                vsTheoretical: '较最低需求: ',
+                dyeRecipe: '染料溶液配方',
+                prepareInDye: '配制染料溶液: ',
+                item: '项目',
+                recipeGl: '配方 (g/l)',
+                bulkG: '用量 (g)',
+                total: '总计:',
+                auxiliaries: '助剂',
+                dyePlaceholder: '染料',
+                auxPlaceholder: '助剂',
+                dyeDefault1: '黄色',
+                dyeDefault2: '红色',
+                dyeDefault3: '蓝色',
+                auxDefault1: '润湿剂',
+                auxDefault2: '消泡剂',
+                alkaliSystem: '碱剂体系',
+                alkaliMethodSection: '碱剂方法设定',
+                alkaliMethod: '碱剂方法',
+                methodA: 'A. 无硅酸盐法',
+                methodB: 'B. 硅酸钠法',
+                methodC: 'C. 改性硅酸钠法',
+                methodD: 'D. 无硅酸盐法(热带地区)',
+                prepareInAlkali: '配制碱液: ',
+                naohType: 'NaOH类型',
+                naohFlakes: 'NaOH 片碱 (100% w/w)',
+                custom: '自定义',
+                baume: '波美度 (°Bé)',
+                basedOnDye: '基于染料: ',
+                silicateConc: '硅酸钠浓度',
+                naohConc: 'NaOH浓度',
+                recipe: '配方',
+                suggested: '建議配方',
+                actual: '實際配方',
+                naohTable: 'NaOH浓度表',
+                alkaliBasis: '碱剂推荐依据',
+                specWeight: '比重 (ρ)',
+                naohContent: 'NaOH含量 (g/l)',
+                naohPercent: 'NaOH % (w/w)',
+                workOrder: 'CPB生产工作单',
+                download: '下载',
+                date: '日期:',
+                qty: '数量:',
+                fabricLabel: '布料:',
+                alkaliLabel: '碱剂:',
+                batchTimeLabel: '堆置时间:',
+                pickupLabel: '轧吸率:',
+                requiredSol: '最低需求量',
+                prepareDye: '配制染料溶液',
+                prepareAlkali: '配制碱液',
+                dyeSolRecipe: '染料溶液配方',
+                prepare: '配制:',
+                alkaliSolRecipe: '碱液配方',
+                quantity: '用量 (g)',
+                saveRecipe: '保存当前配方',
+                saveRecipePlaceholder: '输入配方名称 (例如: 红色-棉布-客户A)',
+                saveButton: '保存配方',
+                sodaAsh: '纯碱',
+                sodiumSilicate: '硅酸钠'
+            },
+            en: {
+                title: 'CPB Recipe Calculator',
+                subtitle: 'Cold Pad Batch Process',
+                loadRecipe: 'Load Saved Recipe',
+                selectRecipe: '-- Select a saved recipe --',
+                delete: 'Delete',
+                orderInfo: 'Order Information',
+                customer: 'Customer',
+                customerPlaceholder: 'Customer Name',
+                colorOrder: 'Color/Order',
+                colorOrderPlaceholder: 'Color Name or Order No.',
+                fabricType: 'Fabric Type',
+                fabricTypePlaceholder: 'e.g. 100% Cotton',
+                fabricInputPrompt: 'Please fill in "Total Fabric Quantity" and "Pickup" above first, to see the recipe and calculation content below',
+                dyeInputPrompt: 'Please fill in the dye amount in "Dye Solution Recipe" above first, to see the alkali recommendation',
+                batchTime: 'Batch Time (hrs)',
+                fabricInfo: 'Fabric Information',
+                calcMode: 'Calculation Mode',
+                directInput: 'Direct Input (kg)',
+                calculateInput: 'Calculate (Fabric Weight × Length)',
+                totalFabric: 'Total Fabric Quantity (kg)',
+                fabricWeight: 'Fabric Weight (g/m)',
+                fabricLength: 'Fabric Length (m)',
+                totalFabricCalc: 'Total Fabric: ',
+                pickup: 'Pickup (%)',
+                solutionPrep: 'Solution Preparation',
+                theoreticalSolution: 'Minimum Required Solution: ',
+                dosingRatio: 'Dosing Ratio 4:1 → ',
+                dye: 'Dye: ',
+                alkali: 'Alkali: ',
+                dyeSolutionPrepare: 'Dye Solution to Prepare (ltr)',
+                alkaliSolutionPrepare: 'Alkali Solution to Prepare (ltr)',
+                vsTheoretical: 'vs Minimum Required: ',
+                dyeRecipe: 'Dye Solution Recipe',
+                prepareInDye: 'Prepare in Dye Solution: ',
+                item: 'Item',
+                recipeGl: 'Recipe (g/l)',
+                bulkG: 'Bulk (g)',
+                total: 'Total:',
+                auxiliaries: 'Auxiliaries',
+                dyePlaceholder: 'Dye',
+                auxPlaceholder: 'Auxiliary',
+                dyeDefault1: 'Yellow',
+                dyeDefault2: 'Red',
+                dyeDefault3: 'Blue',
+                auxDefault1: 'Wetting Agent',
+                auxDefault2: 'Defoamer',
+                alkaliSystem: 'Alkali System',
+                alkaliMethodSection: 'Alkali Method Setup',
+                alkaliMethod: 'Alkali Method',
+                methodA: 'A. Silicate-Free Method',
+                methodB: 'B. Sodium Silicate Method',
+                methodC: 'C. Modified Sodium Silicate Method',
+                methodD: 'D. Silicate-Free Method (Tropical Region)',
+                prepareInAlkali: 'Prepare in Alkali Solution: ',
+                naohType: 'NaOH Type',
+                naohFlakes: 'NaOH Flakes (100% w/w)',
+                custom: 'Custom',
+                baume: 'Baumé (°Bé)',
+                basedOnDye: 'Based on Dye: ',
+                silicateConc: 'Sodium Silicate Concentration',
+                naohConc: 'NaOH Concentration',
+                recipe: 'Recipe',
+                suggested: 'Suggested',
+                actual: 'Actual',
+                naohTable: 'NaOH Concentration Table',
+                alkaliBasis: 'Alkali Recommendation Basis',
+                specWeight: 'Specific Weight (ρ)',
+                naohContent: 'NaOH Content (g/l)',
+                naohPercent: 'NaOH % (w/w)',
+                workOrder: 'CPB Production Sheet',
+                download: 'Download',
+                date: 'Date:',
+                qty: 'Qty:',
+                fabricLabel: 'Fabric:',
+                alkaliLabel: 'Alkali:',
+                batchTimeLabel: 'Batch Time:',
+                pickupLabel: 'Pickup:',
+                requiredSol: 'Min. Required Sol.',
+                prepareDye: 'Prepare Dye Sol.',
+                prepareAlkali: 'Prepare Alkali Sol.',
+                dyeSolRecipe: 'Dye Solution Recipe',
+                prepare: 'Prepare:',
+                alkaliSolRecipe: 'Alkali Solution Recipe',
+                quantity: 'Quantity (g)',
+                saveRecipe: 'Save Current Recipe',
+                saveRecipePlaceholder: 'Enter recipe name (e.g., Red-Cotton-CustomerA)',
+                saveButton: 'Save Recipe',
+                sodaAsh: 'Soda Ash',
+                sodiumSilicate: 'Sodium Silicate'
+            }
+        };
+        
+        function toggleLanguage() {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            document.getElementById('langToggleText').textContent = currentLang === 'zh' ? 'English' : '中文';
+            updateLanguage();
+        }
+        
+        function updateLanguage() {
+            const t = translations[currentLang];
+            
+            // Update all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (t[key]) {
+                    el.textContent = t[key];
+                }
+            });
+            
+            // Update all elements with data-i18n-placeholder attribute
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                if (t[key]) {
+                    el.placeholder = t[key];
+                }
+            });
+
+            // 预设染料/助剂名称(黄色、红色、纯碱...)是可编辑的输入框「值」,不是单纯的标签文字,
+            // 不能像 data-i18n 那样整批覆写——否则使用者如果已经把它改成自己的实际染料名称,
+            // 切个语言就会被强制盖掉。这里只在目前值仍然等于「任一语言」的预设值时才自动翻译,
+            // 代表使用者还没动过这个栏位;一旦被改过,就不再自动跟着语言切换。
+            document.querySelectorAll('[data-i18n-value]').forEach(el => {
+                const key = el.getAttribute('data-i18n-value');
+                const zhVal = translations.zh[key];
+                const enVal = translations.en[key];
+                if (el.value === zhVal || el.value === enVal) {
+                    el.value = t[key];
+                }
+            });
+
+            // 已保存配方下拉选单的预设选项文字是 updateRecipeList() 用 innerHTML 动态组出来的,
+            // 不带 data-i18n 属性,上面那个 data-i18n 迴圈抓不到它,所以语言切换后要额外重建一次;
+            // 重建会让下拉选单显示的选取项目跳回预设选项,这里记录、还原,避免使用者原本选到的
+            // 配方名称在切换语言后看起来「跑掉」(实际配方资料并未受影响,只是下拉选单的显示状态)。
+            const savedRecipesSelect = document.getElementById('savedRecipes');
+            const previousRecipeSelection = savedRecipesSelect ? savedRecipesSelect.value : '';
+            updateRecipeList();
+            if (savedRecipesSelect && previousRecipeSelection) {
+                savedRecipesSelect.value = previousRecipeSelection;
+            }
+
+            // 语言切换后要重新跑 calculate(),不能只呼叫 updateWorkOrder() ——
+            // 「相比理论」那两个提示框是在 calculate() 里面用 innerHTML 重建的(不是靠 data-i18n),
+            // 只呼叫 updateWorkOrder() 不会碰到它们,导致切换语言后这两处文字卡在旧语言不会变。
+            // calculate() 最后自己也会呼叫 updateWorkOrder(),所以这里不用再另外呼叫一次。
+            calculate();
+        }
+        
+        // ========== 原有常量 ==========
+        // Constants
+        const DYE_ALKALI_RATIO = 4;  // 染料:碱剂 = 4:1
+        // 母液倍数由比例公式推导,不再手动写死,避免未来比例可调整时两者失去同步
+        const MOTHER_LIQUOR_DYE_MULTIPLIER = (DYE_ALKALI_RATIO + 1) / DYE_ALKALI_RATIO;   // = 1.25 (when ratio=4)
+        const MOTHER_LIQUOR_ALKALI_MULTIPLIER = DYE_ALKALI_RATIO + 1;                      // = 5   (when ratio=4)
+        // 预设缓冲量:染料液跟碱液「各自」多备 50L(先前是总共只多 50L,拆成 40/10 分配),
+        // 让两边都有相同的余量,不再因为 4:1 比例而不成比例地分配缓冲
+        const DEFAULT_DYE_BUFFER = 50;  // Default extra dye solution (ltr)
+        const DEFAULT_ALKALI_BUFFER = 50;  // Default extra alkali solution (ltr)
+
+        // ========== 碱剂「实际配方」保留机制 ==========
+        // 问题:calculate() 几乎在任何栏位输入时都会被触发,过去的写法会整个重建碱剂表格 innerHTML,
+        // 把使用者已经手动修改过的「实际配方」输入值(如 naohActualA)重置回系统建议值,且不会提示。
+        // 修法:只有当「方法」或「浓度类型(NaOH度数/矽酸鈉浓度/自订波美度)」真的改变时,才视为
+        // 结构性变化并重置为新的建议值(此时数值单位含义本来就变了,重置是正确行为)；
+        // 其余情况(染料配方、布重、轧吸率等栏位变动)一律保留使用者已输入的实际值。
+        let lastAlkaliRenderKey = null;
+        const ALKALI_ACTUAL_INPUT_IDS = [
+            'sodaAshActualA', 'naohActualA',
+            'silicateActualB', 'naohActualB',
+            'silicateActualC', 'naohActualC',
+            'sodaAshActualD', 'naohActualD'
+        ];
+
+        function computeAlkaliRenderKey(method, totalDye) {
+            // 染料浓度也纳入 render key:只要染料配方变动(总浓度改变),就视为「结构性变化」,
+            // 让实际配方跟着新的建议值重置——因为染料浓度改变了,原本那个实际值是针对旧配方
+            // 算出来的,继续沿用会对不上新配方,不像布重、带液率那些跟建议值本身无关的栏位。
+            const dyeKey = ':dye=' + (typeof totalDye === 'number' ? totalDye.toFixed(2) : '');
+            if (method === 'silicate-free') {
+                const t = document.getElementById('alkaliTypeA').value;
+                return 'A:' + t + (t === 'custom' ? ':' + (document.getElementById('customBaumeA').value || '') : '') + dyeKey;
+            } else if (method === 'sodium-silicate') {
+                const sc = document.getElementById('silicateConc').value;
+                const nc = document.getElementById('naohConcB').value;
+                return 'B:' + sc + ':' + nc + (nc === 'custom' ? ':' + (document.getElementById('customBaumeB').value || '') : '') + dyeKey;
+            } else if (method === 'modified-silicate') {
+                const sc = document.getElementById('silicateConcC').value;
+                const nc = document.getElementById('naohConcC').value;
+                return 'C:' + sc + ':' + nc + (nc === 'custom' ? ':' + (document.getElementById('customBaumeC').value || '') : '') + dyeKey;
+            } else if (method === 'tropical-region') {
+                const nc = document.getElementById('naohConcD').value;
+                return 'D:' + nc + (nc === 'custom' ? ':' + (document.getElementById('customBaumeD').value || '') : '') + dyeKey;
+            }
+            return method + dyeKey;
+        }
+
+        // 在清空表格 DOM 之前呼叫:若结构(含染料浓度)未变,把使用者目前的「实际配方」数值抄出来保留;
+        // 若结构改变(切换方法、浓度类型,或染料配方变动),回传空物件,让画面改用新的系统建议值。
+        function capturePreservedAlkaliActuals(method, totalDye) {
+            const renderKey = computeAlkaliRenderKey(method, totalDye);
+            const preserved = {};
+            if (renderKey === lastAlkaliRenderKey) {
+                ALKALI_ACTUAL_INPUT_IDS.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && el.value !== '') preserved[id] = el.value;
+                });
+            }
+            lastAlkaliRenderKey = renderKey;
+            return preserved;
+        }
+        
+        // Recipe Management Functions
+        function saveRecipe() {
+            const recipeName = document.getElementById('recipeName').value.trim();
+            if (!recipeName) {
+                alert(currentLang === 'zh' ? '请输入配方名称' : 'Please enter a recipe name');
+                return;
+            }
+
+            // 防呆:同名配方已存在时先确认,避免手滑覆盖旧资料
+            const existingRecipes = JSON.parse(localStorage.getItem('cpbRecipes') || '{}');
+            if (existingRecipes[recipeName]) {
+                const confirmMsg = currentLang === 'zh'
+                    ? `已存在同名配方「${recipeName}」,是否要覆盖?`
+                    : `A recipe named "${recipeName}" already exists. Overwrite it?`;
+                if (!confirm(confirmMsg)) {
+                    return;
+                }
+            }
+            
+            const recipeData = {
+    // Order Information
+    customerName: document.getElementById('customerName').value,
+    colorOrder: document.getElementById('colorOrder').value,
+    fabricType: document.getElementById('fabricType').value,
+    batchTime: document.getElementById('batchTime').value,
+                
+                // Fabric Information
+                fabricMode: document.querySelector('input[name="fabricMode"]:checked').value,
+                fabricQuantity: document.getElementById('fabricQuantity').value,
+                fabricWeight: document.getElementById('fabricWeight').value,
+                fabricLength: document.getElementById('fabricLength').value,
+                pickUp: document.getElementById('pickUp').value,
+                
+                // Solution Preparation
+                dyeSolution: document.getElementById('dyeSolution').value,
+                alkaliSolution: document.getElementById('alkaliSolution').value,
+                
+                // Dye Recipe
+                dyeRecipes: Array.from(document.querySelectorAll('.dye-recipe')).map((input, i) => ({
+                    name: document.querySelectorAll('#dyeTableBody tr:not(.bg-gray-100):not(.bg-blue-50) input[type="text"]')[i]?.value || '',
+                    value: input.value
+                })),
+                
+                // Auxiliary Recipe
+                auxRecipes: Array.from(document.querySelectorAll('.aux-recipe')).map((input, i) => ({
+                    name: document.querySelectorAll('#dyeTableBody tr.bg-blue-50 ~ tr input[type="text"]')[i]?.value || '',
+                    value: input.value
+                })),
+                
+                // Alkali System
+                alkaliMethod: document.getElementById('alkaliMethod').value,
+                alkaliTypeA: document.getElementById('alkaliTypeA').value,
+                customBaumeA: document.getElementById('customBaumeA').value,
+                silicateConc: document.getElementById('silicateConc').value,
+                naohConcB: document.getElementById('naohConcB').value,
+                customBaumeB: document.getElementById('customBaumeB').value,
+                silicateConcC: document.getElementById('silicateConcC').value,
+                naohConcC: document.getElementById('naohConcC').value,
+                customBaumeC: document.getElementById('customBaumeC').value,
+                naohConcD: document.getElementById('naohConcD').value,
+                customBaumeD: document.getElementById('customBaumeD').value,
+
+                // 碱剂「实际配方」数值(修复:先前版本未保存此栏位,重新载入配方后会遗失使用者调整过的用量)
+                alkaliActuals: Object.fromEntries(
+                    ALKALI_ACTUAL_INPUT_IDS.map(id => [id, document.getElementById(id)?.value ?? null])
+                )
+            };
+            
+            // Get existing recipes
+            let recipes = JSON.parse(localStorage.getItem('cpbRecipes') || '{}');
+            recipes[recipeName] = recipeData;
+            localStorage.setItem('cpbRecipes', JSON.stringify(recipes));
+            
+            // Update dropdown
+            updateRecipeList();
+            document.getElementById('savedRecipes').value = recipeName;
+            
+            alert(currentLang === 'zh' ? '配方保存成功!' : 'Recipe saved successfully!');
+        }
+        
+        function loadRecipe() {
+            const recipeName = document.getElementById('savedRecipes').value;
+            if (!recipeName) return;
+            
+            const recipes = JSON.parse(localStorage.getItem('cpbRecipes') || '{}');
+            const recipeData = recipes[recipeName];
+            
+            if (!recipeData) {
+                alert(currentLang === 'zh' ? '未找到配方' : 'Recipe not found');
+                return;
+            }
+            
+            // Load Order Information
+document.getElementById('customerName').value = recipeData.customerName || '';
+document.getElementById('colorOrder').value = recipeData.colorOrder || '';
+document.getElementById('fabricType').value = recipeData.fabricType || '';
+document.getElementById('batchTime').value = recipeData.batchTime || '20';
+            
+            // Load Fabric Information
+            document.querySelector(`input[name="fabricMode"][value="${recipeData.fabricMode}"]`).checked = true;
+            updateFabricMode();
+            document.getElementById('fabricQuantity').value = recipeData.fabricQuantity || '';
+            document.getElementById('fabricWeight').value = recipeData.fabricWeight || '';
+            document.getElementById('fabricLength').value = recipeData.fabricLength || '';
+            document.getElementById('pickUp').value = recipeData.pickUp || '';
+            
+            // Load Solution Preparation
+            document.getElementById('dyeSolution').value = recipeData.dyeSolution || '';
+            document.getElementById('dyeSolution').dataset.userModified = 'true';
+            document.getElementById('alkaliSolution').value = recipeData.alkaliSolution || '';
+            document.getElementById('alkaliSolution').dataset.userModified = 'true';
+            
+            // Load Dye Recipe
+            const dyeRecipeInputs = document.querySelectorAll('.dye-recipe');
+            const dyeNameInputs = document.querySelectorAll('#dyeTableBody tr:not(.bg-gray-100):not(.bg-blue-50) input[type="text"]');
+            recipeData.dyeRecipes.forEach((item, i) => {
+                if (dyeNameInputs[i]) dyeNameInputs[i].value = item.name;
+                if (dyeRecipeInputs[i]) dyeRecipeInputs[i].value = item.value;
+            });
+            
+            // Load Auxiliary Recipe
+            const auxRecipeInputs = document.querySelectorAll('.aux-recipe');
+            const auxNameInputs = document.querySelectorAll('#dyeTableBody tr.bg-blue-50 ~ tr input[type="text"]');
+            recipeData.auxRecipes.forEach((item, i) => {
+                if (auxNameInputs[i]) auxNameInputs[i].value = item.name;
+                if (auxRecipeInputs[i]) auxRecipeInputs[i].value = item.value;
+            });
+            
+            // Load Alkali System
+            document.getElementById('alkaliMethod').value = recipeData.alkaliMethod || 'silicate-free';
+            updateAlkaliMethod();
+            document.getElementById('alkaliTypeA').value = recipeData.alkaliTypeA || '38';
+            document.getElementById('customBaumeA').value = recipeData.customBaumeA || '';
+            document.getElementById('silicateConc').value = recipeData.silicateConc || '48-50';
+            document.getElementById('naohConcB').value = recipeData.naohConcB || '38';
+            document.getElementById('customBaumeB').value = recipeData.customBaumeB || '';
+            document.getElementById('silicateConcC').value = recipeData.silicateConcC || '48-50';
+            document.getElementById('naohConcC').value = recipeData.naohConcC || '38';
+            document.getElementById('customBaumeC').value = recipeData.customBaumeC || '';
+            document.getElementById('naohConcD').value = recipeData.naohConcD || '50';
+            document.getElementById('customBaumeD').value = recipeData.customBaumeD || '';
+            
+            handleAlkaliTypeChange('A');
+            handleAlkaliTypeChange('B');
+            handleAlkaliTypeChange('C');
+            handleAlkaliTypeChange('D');
+            
+            // Recalculate (此时表格会先用建议值渲染)
+            calculate();
+
+            // 还原使用者当初保存的碱剂「实际配方」数值(若旧配方档案没有此栏位则略过,不影响操作)
+            if (recipeData.alkaliActuals) {
+                ALKALI_ACTUAL_INPUT_IDS.forEach(id => {
+                    const val = recipeData.alkaliActuals[id];
+                    const el = document.getElementById(id);
+                    if (el && val !== null && val !== undefined && val !== '') {
+                        el.value = val;
+                    }
+                });
+                // 还原后的实际值要重新参与保留机制的比对基准,并用它重算用量(g)
+                lastAlkaliRenderKey = computeAlkaliRenderKey(document.getElementById('alkaliMethod').value);
+                calculateAlkaliQuantities();
+            }
+
+            updateWorkOrder();
+            
+            alert(currentLang === 'zh' ? '配方加载成功!' : 'Recipe loaded successfully!');
+        }
+        
+        function deleteRecipe() {
+            const recipeName = document.getElementById('savedRecipes').value;
+            if (!recipeName) {
+                alert(currentLang === 'zh' ? '请选择要删除的配方' : 'Please select a recipe to delete');
+                return;
+            }
+            
+            if (!confirm(currentLang === 'zh' ? `确定要删除 "${recipeName}" 吗?` : `Are you sure you want to delete "${recipeName}"?`)) {
+                return;
+            }
+            
+            let recipes = JSON.parse(localStorage.getItem('cpbRecipes') || '{}');
+            delete recipes[recipeName];
+            localStorage.setItem('cpbRecipes', JSON.stringify(recipes));
+            
+            updateRecipeList();
+            alert(currentLang === 'zh' ? '配方删除成功!' : 'Recipe deleted successfully!');
+        }
+        
+        function updateRecipeList() {
+            const recipes = JSON.parse(localStorage.getItem('cpbRecipes') || '{}');
+            const select = document.getElementById('savedRecipes');
+            const t = translations[currentLang];
+            
+            // Clear existing options except first
+            select.innerHTML = `<option value="">${t.selectRecipe}</option>`;
+            
+            // Add recipe options
+            Object.keys(recipes).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+        
+        // Format number: show 1 decimal if .0, otherwise 2 decimals
+        function formatNumber(num) {
+            // 加千分位逗号,方便肉眼辨识用量动辄好几十万 g 的位数(例如 118737.50 → 118,737.50)
+            const rounded = Math.round(num * 100) / 100;
+            const decimals = (rounded % 1 === 0) ? 1 : 2;
+            return rounded.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+        }
+
+        // 专给会被 parseFloat() 重新解析回数字的元素用(目前只有 totalDyeConc)——
+        // 千分位逗号会让 parseFloat("1,234") 在逗号处被截断,只解析出 1,导致后面的
+        // 建议值计算悄悄算错,所以这几个地方绝对不能用上面那个有逗号的版本。
+        function formatNumberPlain(num) {
+            const rounded = Math.round(num * 100) / 100;
+            if (rounded % 1 === 0) {
+                return rounded.toFixed(1);
+            }
+            return rounded.toFixed(2);
+        }
+        
+        // NaOH Baumé lookup table (from official reference)
+        const baumeTable = {
+            1: { rho: 1.007, gl: 6.0, percent: 0.59 },
+            2: { rho: 1.014, gl: 12.0, percent: 1.18 },
+            3: { rho: 1.022, gl: 18.9, percent: 1.85 },
+            4: { rho: 1.029, gl: 25.7, percent: 2.50 },
+            5: { rho: 1.036, gl: 32.6, percent: 3.15 },
+            6: { rho: 1.045, gl: 39.6, percent: 3.79 },
+            7: { rho: 1.052, gl: 47.3, percent: 4.50 },
+            8: { rho: 1.060, gl: 55.0, percent: 5.20 },
+            9: { rho: 1.067, gl: 62.5, percent: 5.86 },
+            10: { rho: 1.075, gl: 70.7, percent: 6.58 },
+            11: { rho: 1.083, gl: 79.1, percent: 7.30 },
+            12: { rho: 1.091, gl: 88.0, percent: 8.07 },
+            13: { rho: 1.100, gl: 96.6, percent: 8.78 },
+            14: { rho: 1.108, gl: 105.3, percent: 9.50 },
+            15: { rho: 1.116, gl: 114.9, percent: 10.30 },
+            16: { rho: 1.125, gl: 124.4, percent: 11.06 },
+            17: { rho: 1.134, gl: 134.0, percent: 11.84 },
+            18: { rho: 1.142, gl: 145.0, percent: 12.60 },
+            19: { rho: 1.152, gl: 155.5, percent: 13.50 },
+            20: { rho: 1.161, gl: 166.7, percent: 14.35 },
+            21: { rho: 1.171, gl: 177.4, percent: 15.15 },
+            22: { rho: 1.180, gl: 188.8, percent: 16.00 },
+            23: { rho: 1.190, gl: 201.2, percent: 16.91 },
+            24: { rho: 1.200, gl: 213.7, percent: 17.81 },
+            25: { rho: 1.210, gl: 226.4, percent: 18.71 },
+            26: { rho: 1.220, gl: 239.7, percent: 19.65 },
+            27: { rho: 1.231, gl: 253.6, percent: 20.60 },
+            28: { rho: 1.241, gl: 267.4, percent: 21.55 },
+            29: { rho: 1.252, gl: 281.7, percent: 22.50 },
+            30: { rho: 1.263, gl: 296.8, percent: 23.50 },
+            31: { rho: 1.274, gl: 311.9, percent: 24.48 },
+            32: { rho: 1.285, gl: 327.7, percent: 25.50 },
+            33: { rho: 1.297, gl: 344.7, percent: 26.58 },
+            34: { rho: 1.308, gl: 361.7, percent: 27.65 },
+            35: { rho: 1.320, gl: 380.6, percent: 28.83 },
+            36: { rho: 1.332, gl: 399.6, percent: 30.00 },
+            37: { rho: 1.345, gl: 419.6, percent: 31.20 },
+            38: { rho: 1.357, gl: 441.0, percent: 32.50 },
+            39: { rho: 1.370, gl: 462.1, percent: 33.73 },
+            40: { rho: 1.383, gl: 484.1, percent: 35.00 },
+            41: { rho: 1.397, gl: 507.9, percent: 36.36 },
+            42: { rho: 1.410, gl: 530.9, percent: 37.65 },
+            43: { rho: 1.424, gl: 556.2, percent: 39.06 },
+            44: { rho: 1.438, gl: 582.0, percent: 40.47 },
+            45: { rho: 1.453, gl: 610.6, percent: 42.02 },
+            46: { rho: 1.468, gl: 639.8, percent: 43.58 },
+            47: { rho: 1.483, gl: 669.7, percent: 45.16 },
+            48: { rho: 1.498, gl: 700.0, percent: 46.73 },
+            49: { rho: 1.514, gl: 732.9, percent: 48.41 },
+            50: { rho: 1.530, gl: 766.5, percent: 50.10 }
+        };
+
+        function toggleTable() {
+            const table = document.getElementById('naohTable');
+            const icon = document.getElementById('tableIcon');
+            table.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        function toggleAlkaliBasisTable() {
+            const table = document.getElementById('alkaliBasisTable');
+            const icon = document.getElementById('alkaliBasisIcon');
+            table.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // 「碱剂推荐依据」参考表:跟着目前选的方法(A/B/C/D)动态换内容,
+        // 直接复用建议值计算时用的同一份数据(silicateFreeRegularTableA / sodiumSilicateDataB 等),
+        // 不重新誊一份数字,避免以后数据更新时两处不同步。
+        // 目前染料用量落在哪一个级距,会用黄底highlight标示,方便对照建议值是怎么来的。
+        function renderAlkaliBasisTable() {
+            const container = document.getElementById('alkaliBasisTable');
+            if (!container) return;
+            const method = document.getElementById('alkaliMethod').value;
+            const totalDye = parseFloat(document.getElementById('totalDyeConc')?.textContent) || 0;
+            const zh = currentLang === 'zh';
+            const th = (label) => `<th class="border px-2 py-1">${label}</th>`;
+            let html = '';
+
+            if (method === 'silicate-free') {
+                const headers = zh
+                    ? ['染料用量 (g/l)', '纯碱 (g/l)', 'NaOH 50% (cc/l)', 'NaOH 50% (g/l)', 'NaOH 片碱 (g/l)']
+                    : ['Dye (g/l)', 'Soda Ash (g/l)', 'NaOH 50% (cc/l)', 'NaOH 50% (g/l)', 'NaOH Flakes (g/l)'];
+                let rows = '';
+                let prevMax = 0;
+                silicateFreeRegularTableA.forEach(row => {
+                    const inRange = totalDye > 0 && totalDye > prevMax - 1e-9 && totalDye <= row.max + 1e-9;
+                    const label = row.max === Infinity ? `≥${prevMax}` : (prevMax === 0 ? `≤${row.max}` : `${prevMax}~${row.max}`);
+                    rows += `<tr class="${inRange ? 'bg-yellow-50 font-bold' : ''}">
+                        <td class="border px-2 py-1 text-center">${label}</td>
+                        <td class="border px-2 py-1 text-center">${row.sodaAsh}</td>
+                        <td class="border px-2 py-1 text-center">${row.naoh50CcPerL}</td>
+                        <td class="border px-2 py-1 text-center">${row.naoh50GPerL}</td>
+                        <td class="border px-2 py-1 text-center">${row.naohFlakesGPerL}</td>
+                    </tr>`;
+                    prevMax = row.max;
+                });
+                html = `
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead><tr class="table-header">${headers.map(th).join('')}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <p class="text-xs text-gray-500 mt-2">${zh ? '参考来源: Everzol C, ED, CS & ERC 染料 · 无矽酸盐法(常规)建议表' : 'Source: Everzol C, ED, CS & ERC dyes · Silicate-Free (Regular) recommendation chart'}</p>
+                `;
+            } else if (method === 'sodium-silicate' || method === 'modified-silicate') {
+                const isB = method === 'sodium-silicate';
+                const silicateConc = document.getElementById(isB ? 'silicateConc' : 'silicateConcC').value;
+                const data = (isB ? sodiumSilicateDataB : sodiumSilicateDataC)[silicateConc];
+                const headers = zh ? ['染料用量 (g/l)', 'NaOH 38°Bé (ml/l)'] : ['Dye (g/l)', 'NaOH 38°Bé (ml/l)'];
+                const keys = Object.keys(data.naoh).map(Number).sort((a, b) => a - b);
+                let rows = '';
+                let prevMax = 0;
+                keys.forEach(k => {
+                    const inRange = totalDye > 0 && totalDye > prevMax - 1e-9 && totalDye <= k + 1e-9;
+                    const label = prevMax === 0 ? `≤${k}` : `${prevMax}~${k}`;
+                    rows += `<tr class="${inRange ? 'bg-yellow-50 font-bold' : ''}">
+                        <td class="border px-2 py-1 text-center">${label}</td>
+                        <td class="border px-2 py-1 text-center">${data.naoh[k]}</td>
+                    </tr>`;
+                    prevMax = k;
+                });
+                html = `
+                    <p class="text-xs sm:text-sm font-semibold text-gray-700 mb-2">${zh ? '硅酸钠' : 'Sodium Silicate'} ${silicateConc}°Bé (${data.gl} g/l)</p>
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead><tr class="table-header">${headers.map(th).join('')}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            } else if (method === 'tropical-region') {
+                const headers = zh ? ['染料用量 (g/l)', '纯碱 (g/l)', 'NaOH 50% (cc/l)'] : ['Dye (g/l)', 'Soda Ash (g/l)', 'NaOH 50% (cc/l)'];
+                let rows = '';
+                tropicalRegionNaOH.ranges.forEach(r => {
+                    const inRange = totalDye > 0 && totalDye >= r.min - 1e-9 && totalDye <= r.max + 1e-9;
+                    const label = r.min === -Infinity ? `≤${r.max}` : (r.max === Infinity ? `≥${r.min}` : `${r.min}~${r.max}`);
+                    rows += `<tr class="${inRange ? 'bg-yellow-50 font-bold' : ''}">
+                        <td class="border px-2 py-1 text-center">${label}</td>
+                        <td class="border px-2 py-1 text-center">20</td>
+                        <td class="border px-2 py-1 text-center">${r.cc}</td>
+                    </tr>`;
+                });
+                html = `
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead><tr class="table-header">${headers.map(th).join('')}</tr></thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+async function copyWorkOrderAsImage(evt) {
+            // 明确接收 event 参数,不再依赖浏览器隐式的全域 window.event(该写法已过时,
+            // 若未来把 onclick 改成 addEventListener 绑定就会失效)
+            const button = evt.target.closest('button');
+            const originalText = button.innerHTML;
+            
+            // Show loading state
+            button.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span class="ml-2">Processing...</span>';
+            button.disabled = true;
+            
+            // Hide button before capturing
+            const tempDisplay = button.style.display;
+            button.style.display = 'none';
+            
+            try {
+                const workOrder = document.getElementById('workOrderSection');
+                
+                // Force A4 width for capture (temporarily)
+                const originalWidth = workOrder.style.width;
+                const originalMaxWidth = workOrder.style.maxWidth;
+                const originalMinWidth = workOrder.style.minWidth;
+                const originalBorder = workOrder.style.border;
+                const originalPadding = workOrder.style.padding;
+                
+                workOrder.style.width = '794px'; // A4 width at 96 DPI
+                workOrder.style.maxWidth = '794px';
+                workOrder.style.minWidth = '794px';
+                workOrder.style.border = 'none'; // Remove green border for download
+                workOrder.style.padding = '1.5rem'; // Force desktop padding
+                
+                // Use html2canvas to convert to image with A4 proportions
+                const canvas = await html2canvas(workOrder, {
+                    backgroundColor: '#ffffff',
+                    scale: 3, // Higher scale for better quality
+                    logging: false,
+                    useCORS: true,
+                    width: 794, // A4 width in pixels at 96 DPI (210mm)
+                    windowWidth: 794
+                });
+                
+                // Restore original styles
+                workOrder.style.width = originalWidth;
+                workOrder.style.maxWidth = originalMaxWidth;
+                workOrder.style.minWidth = originalMinWidth;
+                workOrder.style.border = originalBorder;
+                workOrder.style.padding = originalPadding;
+                
+                // Show button again
+                button.style.display = tempDisplay;
+                button.innerHTML = originalText;
+                button.disabled = false;
+                
+                // Convert canvas to blob
+                canvas.toBlob(async (blob) => {
+                    if (!blob) {
+                        alert('Failed to generate image');
+                        return;
+                    }
+                    
+                    try {
+                        // Always download
+                        downloadImage(blob, button, originalText);
+                        
+                        // Reset button after 2 seconds
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.classList.remove('bg-green-600');
+                            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                            button.disabled = false;
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to process image:', err);
+                        button.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><span class="ml-2">Failed</span>';
+                        button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                        button.classList.add('bg-red-600');
+                        
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.classList.remove('bg-red-600');
+                            button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                            button.disabled = false;
+                        }, 2000);
+                    }
+                }, 'image/png');
+                
+            } catch (err) {
+                console.error('Error generating image:', err);
+                
+                // Restore original styles in case of error
+                const workOrder = document.getElementById('workOrderSection');
+                workOrder.style.width = '';
+                workOrder.style.maxWidth = '';
+                workOrder.style.border = '';
+                
+                button.style.display = tempDisplay;
+                button.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><span class="ml-2">Failed</span>';
+                button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                button.classList.add('bg-red-600');
+                button.disabled = false;
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.classList.remove('bg-red-600');
+                    button.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                }, 2000);
+            }
+        }
+
+        function downloadImage(blob, button, originalText) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date();
+            const timestamp = `${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}_${String(date.getHours()).padStart(2,'0')}${String(date.getMinutes()).padStart(2,'0')}`;
+            a.href = url;
+            a.download = `CPB_WorkOrder_${timestamp}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // Show download success
+            button.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg><span class="ml-2">Downloaded!</span>';
+            button.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            button.classList.add('bg-green-600');
+        }
+
+        function handleAlkaliTypeChange(method) {
+            const typeSelect = document.getElementById(method === 'A' ? 'alkaliTypeA' : (method === 'B' ? 'naohConcB' : (method === 'C' ? 'naohConcC' : 'naohConcD')));
+            const customInput = document.getElementById('customInput' + method);
+            
+            if (typeSelect.value === 'custom') {
+                customInput.classList.remove('hidden');
+                // 切到「自订」时立刻检查目前波美度是否有效,让警示与 ρ/g·l⁻¹/% 显示同步更新
+                updateCustomNaOH(method);
+                return; // updateCustomNaOH() 内部已经会呼叫 calculate(),不用重复呼叫
+            } else {
+                customInput.classList.add('hidden');
+            }
+            calculate();
+        }
+
+        function updateCustomNaOH(method) {
+            const rawValue = document.getElementById('customBaume' + method).value;
+            const baume = parseInt(rawValue);
+            const warningEl = document.getElementById('customWarning' + method);
+            
+            if (baume >= 1 && baume <= 50 && baumeTable[baume]) {
+                const data = baumeTable[baume];
+                document.getElementById('customRho' + method).textContent = data.rho;
+                document.getElementById('customGl' + method).textContent = data.gl;
+                document.getElementById('customPercent' + method).textContent = data.percent + '%';
+                warningEl.classList.add('hidden');
+                warningEl.textContent = '';
+            } else {
+                document.getElementById('customRho' + method).textContent = '-';
+                document.getElementById('customGl' + method).textContent = '-';
+                document.getElementById('customPercent' + method).textContent = '-';
+                // 波美度无效或未填写:计算仍会继续,但会暂时改用 38°Bé 标准参数,
+                // 必须明确告知使用者,不能只靠上面那几个 "-" 让人自己猜
+                warningEl.classList.remove('hidden');
+                warningEl.textContent = rawValue.trim() === ''
+                    ? (currentLang === 'zh' ? '请输入波美度,系统暂以 38°Bé 标准值计算' : 'Please enter a Baumé value — using 38°Bé standard for now')
+                    : (currentLang === 'zh' ? '波美度需介于 1~50 之间,系统暂以 38°Bé 标准值计算' : 'Baumé must be between 1–50 — using 38°Bé standard for now');
+            }
+            
+            calculate();
+        }
+
+        function getNaOHData(method) {
+            const typeSelect = document.getElementById(method === 'A' ? 'alkaliTypeA' : (method === 'B' ? 'naohConcB' : (method === 'C' ? 'naohConcC' : 'naohConcD')));
+            const type = typeSelect.value;
+            
+            if (type === 'custom') {
+                const baume = parseInt(document.getElementById('customBaume' + method).value);
+                if (baume >= 1 && baume <= 50 && baumeTable[baume]) {
+                    const data = baumeTable[baume];
+                    return { specWeight: data.rho, contentGl: data.gl };
+                } else {
+                    return { specWeight: 1.357, contentGl: 441.0 };
+                }
+            } else {
+                return naohConcData[type];
+            }
+        }
+
+        
+        // Tropical Region NaOH lookup table (based on 50% NaOH cc/l as standard)
+        // min/max 皆为闭区间下界/闭区间上界(min <= dyeConc <= max)。查表不依赖阵列排列顺序。
+        const tropicalRegionNaOH = {
+            ranges: [
+                { min: -Infinity, max: 10, cc: 2.5 },
+                { min: 10, max: 20, cc: 3.0 },
+                { min: 20, max: 40, cc: 4.5 },
+                { min: 40, max: 60, cc: 6.5 },
+                { min: 60, max: 80, cc: 8.5 },
+                { min: 80, max: 100, cc: 10.5 },
+                { min: 100, max: Infinity, cc: 12.0 }
+            ]
+        };
+        
+        function getNaOHForTropicalRegion(dyeConc) {
+            for (let range of tropicalRegionNaOH.ranges) {
+                if (dyeConc >= range.min && dyeConc <= range.max) {
+                    return range.cc;
+                }
+            }
+            return 2.5; // default (should not be reached — ranges cover -Infinity..Infinity)
+        }
+        
+        // Sodium Silicate data for Method B
+        const sodiumSilicateDataB = {
+            '37-40': { gl: 130, naoh: { 20: 23.5, 30: 28.5, 40: 28.5, 50: 33.5, 60: 33.5, 70: 38.5 } },
+            '40-42': { gl: 110, naoh: { 20: 23.5, 30: 28.5, 40: 28.5, 50: 33.5, 60: 33.5, 70: 38.5 } },
+            '48-50': { gl: 100, naoh: { 20: 15, 30: 20, 40: 20, 50: 25, 60: 25, 70: 30 } },
+            '58-60': { gl: 90, naoh: { 20: 6, 30: 11, 40: 11, 50: 16, 60: 16, 70: 21 } }
+        };
+
+        // Sodium Silicate data for Method C
+        const sodiumSilicateDataC = {
+            '37-40': { gl: 65, naoh: { 10: 7, 20: 12, 30: 12, 40: 17, 50: 17, 60: 22 } },
+            '40-42': { gl: 55, naoh: { 10: 7, 20: 12, 30: 12, 40: 17, 50: 17, 60: 22 } },
+            '48-50': { gl: 50, naoh: { 10: 5, 20: 10, 30: 10, 40: 15, 50: 15, 60: 20 } },
+            '58-60': { gl: 45, naoh: { 10: 3, 20: 7, 30: 7, 40: 11, 50: 11, 60: 16 } }
+        };
+
+        // NaOH concentration data
+        const naohConcData = {
+            '38': { specWeight: 1.357, contentGl: 441.0 },
+            '50': { specWeight: 1.530, contentGl: 766.5 },
+            'flakes': { specWeight: 1.0, contentGl: 1000.0 }
+        };
+
+        // Method A (无硅酸盐法-常规) 建议用量表
+        // 数据来源: "Alkali Recommendation For Everzol C, ED, CS & ERC Dyes (Silicate Free Method-Regular)" 参考图表
+        // 纯碱固定 20 g/l;NaOH(50%) 的 cc/l、g/l、片碱三栏取表中原始数值(非理论换算,以符合原厂建议为准)
+        const silicateFreeRegularTableA = [
+            { max: 10,        sodaAsh: 20, naoh50CcPerL: 4.0,  naoh50GPerL: 6.0,  naohFlakesGPerL: 3.00 },
+            { max: 20,        sodaAsh: 20, naoh50CcPerL: 5.0,  naoh50GPerL: 7.5,  naohFlakesGPerL: 3.75 },
+            { max: 40,        sodaAsh: 20, naoh50CcPerL: 7.0,  naoh50GPerL: 10.5, naohFlakesGPerL: 5.25 },
+            { max: 60,        sodaAsh: 20, naoh50CcPerL: 10.0, naoh50GPerL: 15.0, naohFlakesGPerL: 7.50 },
+            { max: 80,        sodaAsh: 20, naoh50CcPerL: 12.5, naoh50GPerL: 19.0, naohFlakesGPerL: 9.50 },
+            { max: 100,       sodaAsh: 20, naoh50CcPerL: 15.0, naoh50GPerL: 23.0, naohFlakesGPerL: 11.50 },
+            { max: Infinity,  sodaAsh: 20, naoh50CcPerL: 16.5, naoh50GPerL: 25.0, naohFlakesGPerL: 12.50 }
+        ];
+
+        function getAlkaliTableRowA(dyeConc) {
+            for (const row of silicateFreeRegularTableA) {
+                if (dyeConc <= row.max) return row;
+            }
+            return silicateFreeRegularTableA[silicateFreeRegularTableA.length - 1];
+        }
+
+        function getAlkaliRecommendationA(dyeConc) {
+            const row = getAlkaliTableRowA(dyeConc);
+            // 参考表未提供 38°Bé 栏位,以 50%→38° 的含量等质量换算推导(与其他方法换算逻辑一致)
+            const naoh38 = row.naoh50CcPerL * naohConcData['50'].contentGl / naohConcData['38'].contentGl;
+
+            return {
+                sodaAsh: row.sodaAsh,
+                naoh38: parseFloat(naoh38.toFixed(2)),
+                naoh50: row.naoh50CcPerL,
+                naoh50GPerL: row.naoh50GPerL,   // 参考表原始数值,供核对用
+                naohFlakes: row.naohFlakesGPerL
+            };
+        }
+
+        function getNaOHForSodiumSilicate(dyeConc, data) {
+            const keys = Object.keys(data.naoh).map(Number).sort((a,b) => a-b);
+            for (let i = 0; i < keys.length; i++) {
+                if (dyeConc <= keys[i]) return data.naoh[keys[i]];
+            }
+            return data.naoh[keys[keys.length - 1]];
+        }
+
+        // ========== 共用的「建议配方」计算函式 ==========
+        // 目的:calculate()(画面即时表格)和 updateWorkOrder()(可下载的工作单)原本各自
+        // 重复实作一份完全相同的建议值公式,两处很容易在日后修改时不同步。
+        // 现在统一收进这四个函式,两处呼叫同一份逻辑,单一事实来源(single source of truth)。
+        function computeMethodASuggestion(totalDye) {
+            const alkaliRec = getAlkaliRecommendationA(totalDye);
+            const alkaliType = document.getElementById('alkaliTypeA').value;
+            const naohData = getNaOHData('A');
+            const sodaAshLabel = currentLang === 'zh' ? '纯碱' : 'Soda Ash';
+            const sodaAshSuggested = alkaliRec.sodaAsh;
+            let naohSuggested, naohUnit, naohLabel, naohInfo;
+
+            if (alkaliType === 'custom') {
+                const customBaume = parseInt(document.getElementById('customBaumeA').value) || 38;
+                naohSuggested = (alkaliRec.naoh38 * 441.0 / naohData.contentGl).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${customBaume}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${naohData.specWeight}</div>`;
+            } else if (alkaliType === 'flakes') {
+                naohSuggested = alkaliRec.naohFlakes;
+                naohUnit = 'g/l';
+                naohLabel = currentLang === 'zh' ? 'NaOH 片碱' : 'NaOH Flakes';
+                naohInfo = '';
+            } else {
+                const specWeight = alkaliType === '38' ? 1.357 : 1.530;
+                naohSuggested = (alkaliType === '38' ? alkaliRec.naoh38 : alkaliRec.naoh50).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${alkaliType}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${specWeight}</div>`;
+            }
+
+            return { alkaliType, naohData, sodaAshLabel, sodaAshSuggested, naohLabel, naohSuggested, naohUnit, naohInfo };
+        }
+
+        function computeMethodBSuggestion(totalDye) {
+            const silicateConc = document.getElementById('silicateConc').value;
+            const silicateData = sodiumSilicateDataB[silicateConc];
+            const naohMl38 = getNaOHForSodiumSilicate(totalDye, silicateData);
+            const naohConc = document.getElementById('naohConcB').value;
+            const naohData = getNaOHData('B');
+            const sodiumSilicateLabel = currentLang === 'zh' ? '硅酸钠' : 'Sodium Silicate';
+            const silicateSuggested = silicateData.gl;
+            let naohSuggested, naohUnit, naohLabel, naohInfo;
+
+            if (naohConc === 'custom') {
+                const customBaume = parseInt(document.getElementById('customBaumeB').value) || 38;
+                naohSuggested = (naohMl38 * 441.0 / naohData.contentGl).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${customBaume}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${naohData.specWeight}</div>`;
+            } else if (naohConc === 'flakes') {
+                naohSuggested = (naohMl38 * 441.0 / 1000).toFixed(1);
+                naohUnit = 'g/l';
+                naohLabel = currentLang === 'zh' ? 'NaOH 片碱' : 'NaOH Flakes';
+                naohInfo = '';
+            } else {
+                naohSuggested = (naohMl38 * 441.0 / naohData.contentGl).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${naohConc}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${naohData.specWeight}</div>`;
+            }
+
+            return { naohConc, naohData, silicateConc, sodiumSilicateLabel, silicateSuggested, naohLabel, naohSuggested, naohUnit, naohInfo };
+        }
+
+        function computeMethodCSuggestion(totalDye) {
+            const silicateConc = document.getElementById('silicateConcC').value;
+            const silicateData = sodiumSilicateDataC[silicateConc];
+            const naohMl38 = getNaOHForSodiumSilicate(totalDye, silicateData);
+            const naohConc = document.getElementById('naohConcC').value;
+            const naohData = getNaOHData('C');
+            const sodiumSilicateLabel = currentLang === 'zh' ? '硅酸钠' : 'Sodium Silicate';
+            const silicateSuggested = silicateData.gl;
+            let naohSuggested, naohUnit, naohLabel, naohInfo;
+
+            if (naohConc === 'custom') {
+                const customBaume = parseInt(document.getElementById('customBaumeC').value) || 38;
+                naohSuggested = (naohMl38 * 441.0 / naohData.contentGl).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${customBaume}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${naohData.specWeight}</div>`;
+            } else if (naohConc === 'flakes') {
+                naohSuggested = (naohMl38 * 441.0 / 1000).toFixed(1);
+                naohUnit = 'g/l';
+                naohLabel = currentLang === 'zh' ? 'NaOH 片碱' : 'NaOH Flakes';
+                naohInfo = '';
+            } else {
+                naohSuggested = (naohMl38 * 441.0 / naohData.contentGl).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${naohConc}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${naohData.specWeight}</div>`;
+            }
+
+            return { naohConc, naohData, silicateConc, sodiumSilicateLabel, silicateSuggested, naohLabel, naohSuggested, naohUnit, naohInfo };
+        }
+
+        function computeMethodDSuggestion(totalDye) {
+            const naohCc50 = getNaOHForTropicalRegion(totalDye);
+            const naohConc = document.getElementById('naohConcD').value;
+            const naohData = getNaOHData('D');
+            const sodaAshLabel = currentLang === 'zh' ? '纯碱' : 'Soda Ash';
+            const sodaAshSuggested = 20;
+            let naohSuggested, naohUnit, naohLabel, naohInfo;
+
+            if (naohConc === 'custom') {
+                const customBaume = parseInt(document.getElementById('customBaumeD').value) || 50;
+                naohSuggested = (naohCc50 * 766.5 / naohData.contentGl).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = `NaOH ${customBaume}°Bé`;
+                naohInfo = `<div class="text-xs text-gray-500">ρ=${naohData.specWeight}</div>`;
+            } else if (naohConc === 'flakes') {
+                naohSuggested = (naohCc50 * naohConcData['50'].contentGl / 1000).toFixed(1);
+                naohUnit = 'g/l';
+                naohLabel = currentLang === 'zh' ? 'NaOH 片碱' : 'NaOH Flakes';
+                naohInfo = '';
+            } else if (naohConc === '50') {
+                naohSuggested = naohCc50.toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = 'NaOH 50°Bé';
+                naohInfo = '<div class="text-xs text-gray-500">ρ=1.530</div>';
+            } else {
+                naohSuggested = (naohCc50 * 766.5 / 441.0).toFixed(1);
+                naohUnit = 'ml/l';
+                naohLabel = 'NaOH 38°Bé';
+                naohInfo = '<div class="text-xs text-gray-500">ρ=1.357</div>';
+            }
+
+            return { naohConc, naohData, sodaAshLabel, sodaAshSuggested, naohLabel, naohSuggested, naohUnit, naohInfo };
+        }
+
+        function updateFabricMode() {
+            const mode = document.querySelector('input[name="fabricMode"]:checked').value;
+            if (mode === 'direct') {
+                document.getElementById('directMode').classList.remove('hidden');
+                document.getElementById('calculateMode').classList.add('hidden');
+            } else {
+                document.getElementById('directMode').classList.add('hidden');
+                document.getElementById('calculateMode').classList.remove('hidden');
+            }
+            calculate();
+        }
+
+        function updateAlkaliMethod() {
+            const method = document.getElementById('alkaliMethod').value;
+            // methodA/B/C/D 的「基于染料」显示已合并成同一行(dyeConcCurrent),不再需要个别显示/隐藏切换
+            // 方法/NaOH类型选择区块已经搬到上面(染料配方之前),这里要同步切换对应的选择区
+            document.getElementById('methodASelect').classList.toggle('hidden', method !== 'silicate-free');
+            document.getElementById('methodBSelect').classList.toggle('hidden', method !== 'sodium-silicate');
+            document.getElementById('methodCSelect').classList.toggle('hidden', method !== 'modified-silicate');
+            document.getElementById('methodDSelect').classList.toggle('hidden', method !== 'tropical-region');
+            // NaOH类型(方法A专用)现在跟「碱剂方法」并排显示,只有选到方法 A 时才有意义
+            document.getElementById('naohTypeASlot').classList.toggle('hidden', method !== 'silicate-free');
+            calculate();
+        }function calculate() {
+            // Fabric quantity
+            const mode = document.querySelector('input[name="fabricMode"]:checked').value;
+            let fabricQty;
+            if (mode === 'direct') {
+                fabricQty = parseFloat(document.getElementById('fabricQuantity').value) || 0;
+            } else {
+                const weight = parseFloat(document.getElementById('fabricWeight').value) || 0;
+                const length = parseFloat(document.getElementById('fabricLength').value) || 0;
+                fabricQty = weight * length / 1000;
+                document.getElementById('calculatedFabric').textContent = formatNumber(fabricQty) + ' kg';
+            }
+
+            const pickUp = parseFloat(document.getElementById('pickUp').value) || 0;
+            const theoretical = fabricQty * pickUp / 100;
+            document.getElementById('theoreticalSolution').textContent = formatNumber(theoretical) + ' ltr';
+
+            // 布量、轧吸率两个都要有实际填的正数值,才显示后面的配方与计算内容;
+            // 只要还有一个是空的/0,就先显示提示卡片,不要让使用者看到一整排 0.00 的困惑画面
+            const planSection = document.getElementById('planSection');
+            const fabricInputPrompt = document.getElementById('fabricInputPrompt');
+            const hasValidFabricInputs = fabricQty > 0 && pickUp > 0;
+            if (planSection && fabricInputPrompt) {
+                planSection.classList.toggle('hidden', !hasValidFabricInputs);
+                fabricInputPrompt.classList.toggle('hidden', hasValidFabricInputs);
+            }
+            if (!hasValidFabricInputs) {
+                // 门槛还没跨过,但上面「碱剂方法设定」区块本来就一直看得到、可以互动,
+                // 所以这两个跟方法/NaOH类型选择有关的提示还是要照常更新,不能因为提早 return 就卡住
+                updateCurrentMethodBanner();
+                renderAlkaliBasisTable();
+                return; // 布量/轧吸率还没填好,后面的计算跟 DOM 更新都还没有意义,先不继续跑
+            }
+
+            // Calculate theoretical split using DYE_ALKALI_RATIO
+            const theoreticalDye = theoretical * DYE_ALKALI_RATIO / (DYE_ALKALI_RATIO + 1);
+            const theoreticalAlkali = theoretical * 1 / (DYE_ALKALI_RATIO + 1);
+            
+            // Display theoretical dye and alkali
+            document.getElementById('theoreticalDyeSol').textContent = formatNumber(theoreticalDye) + ' ltr';
+            document.getElementById('theoreticalAlkaliSol').textContent = formatNumber(theoreticalAlkali) + ' ltr';
+
+            // Auto-update dye and alkali solutions based on theoretical values
+            const dyeSolInput = document.getElementById('dyeSolution');
+            const alkaliSolInput = document.getElementById('alkaliSolution');
+            
+            // Only auto-update if user hasn't manually changed the values
+            if (!dyeSolInput.dataset.userModified) {
+                dyeSolInput.value = (theoreticalDye + DEFAULT_DYE_BUFFER).toFixed(2);
+            }
+            if (!alkaliSolInput.dataset.userModified) {
+                alkaliSolInput.value = (theoreticalAlkali + DEFAULT_ALKALI_BUFFER).toFixed(2);
+            }
+
+            const dyeSol = parseFloat(dyeSolInput.value) || 0;
+            const alkaliSol = parseFloat(alkaliSolInput.value) || 0;
+            
+            // Show differences from theoretical
+            const dyeDiff = dyeSol - theoreticalDye;
+            const alkaliDiff = alkaliSol - theoreticalAlkali;
+            
+            const t = translations[currentLang];
+            
+            document.getElementById('dyeDifference').innerHTML = `
+                <span class="font-semibold text-blue-800">${t.vsTheoretical}</span>
+                <span class="text-sm font-bold ${dyeDiff >= 0 ? 'text-gray-600' : 'text-red-700'}">${dyeDiff >= 0 ? '+' : ''}${formatNumber(dyeDiff)} ltr</span>
+            `;
+            
+            document.getElementById('alkaliDifference').innerHTML = `
+                <span class="font-semibold text-green-800">${t.vsTheoretical}</span>
+                <span class="text-sm font-bold ${alkaliDiff >= 0 ? 'text-gray-600' : 'text-red-700'}">${alkaliDiff >= 0 ? '+' : ''}${formatNumber(alkaliDiff)} ltr</span>
+            `;
+            
+            // Total actual solution (removed from display but keep calculation)
+            const totalActual = dyeSol + alkaliSol;
+            
+            document.getElementById('dyeSolutionLabel').textContent = formatNumber(dyeSol);
+            document.getElementById('alkaliSolutionLabel').textContent = formatNumber(alkaliSol);
+
+            // Dyes - use mother liquor concentration
+            const dyeRecipes = document.querySelectorAll('.dye-recipe');
+            const dyeQuantities = document.querySelectorAll('.dye-quantity');
+            let totalDye = 0;
+            dyeRecipes.forEach((input, i) => {
+                const recipe = parseFloat(input.value) || 0;
+                totalDye += recipe;
+                const motherLiquorConc = recipe * MOTHER_LIQUOR_DYE_MULTIPLIER;
+                dyeQuantities[i].textContent = formatNumber(motherLiquorConc * dyeSol);
+            });
+            document.getElementById('totalDyeConc').textContent = formatNumberPlain(totalDye);
+            // 「基于染料」四个方法共用同一个显示位置,不管选哪个方法都要更新(原本各方法各自更新,搬移后统一放这里)
+            document.getElementById('dyeConcCurrent').textContent = formatNumberPlain(totalDye);
+
+            // Auxiliaries - use mother liquor concentration
+            const auxRecipes = document.querySelectorAll('.aux-recipe');
+            const auxQuantities = document.querySelectorAll('.aux-quantity');
+            auxRecipes.forEach((input, i) => {
+                const recipe = parseFloat(input.value) || 0;
+                const motherLiquorConc = recipe * MOTHER_LIQUOR_DYE_MULTIPLIER;
+                auxQuantities[i].textContent = formatNumber(motherLiquorConc * dyeSol);
+            });
+
+            // Alkali calculation based on method
+            const method = document.getElementById('alkaliMethod').value;
+            const tbody = document.getElementById('alkaliTableBody');
+
+            // 染料还没填(总浓度为 0)时不显示碱剂建议表,避免让人误以为那是算好的真实建议
+            const alkaliTableWrapper = document.getElementById('alkaliTableWrapper');
+            const dyeInputPrompt = document.getElementById('dyeInputPrompt');
+            const hasDyeInput = totalDye > 0;
+            if (alkaliTableWrapper && dyeInputPrompt) {
+                alkaliTableWrapper.classList.toggle('hidden', !hasDyeInput);
+                dyeInputPrompt.classList.toggle('hidden', hasDyeInput);
+            }
+            if (!hasDyeInput) {
+                tbody.innerHTML = '';
+                lastAlkaliRenderKey = null; // 之后真的填了染料,要当成结构性变化重新给建议值,不要误判成「延续旧值」
+                updateWorkOrder();
+                return;
+            }
+
+            // 在清空 DOM 前,先保留使用者已输入的「实际配方」(若结构未变)
+            const preservedActuals = capturePreservedAlkaliActuals(method, totalDye);
+            tbody.innerHTML = '';
+
+            if (method === 'silicate-free') {
+    // Method A
+    const { alkaliType, sodaAshLabel, sodaAshSuggested, naohLabel, naohSuggested, naohUnit, naohInfo } = computeMethodASuggestion(totalDye);
+
+    // Build table with suggested and actual columns
+    // 若使用者先前已手动修改过实际值(且方法/类型未变),沿用该值,不用系统建议值覆盖
+    const sodaAshActualValA = preservedActuals.sodaAshActualA !== undefined ? preservedActuals.sodaAshActualA : sodaAshSuggested;
+    const naohActualValA = preservedActuals.naohActualA !== undefined ? preservedActuals.naohActualA : naohSuggested;
+    const tbody = document.getElementById('alkaliTableBody');
+    tbody.innerHTML = `
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 text-sm">${sodaAshLabel}</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${sodaAshSuggested} g/l</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="sodaAshActualA" value="${sodaAshActualValA}" step="0.1" min="0" data-suggested="${sodaAshSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="sodaAshQtyA">-</td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2">
+                <div class="text-sm font-medium">${naohLabel}</div>
+                ${naohInfo}
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${naohSuggested} ${naohUnit}</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="naohActualA" value="${naohActualValA}" step="0.1" min="0" data-suggested="${naohSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="naohQtyA">-</td>
+        </tr>
+    `;
+    
+    // Calculate quantities based on actual values
+    calculateAlkaliQuantities();
+            } else if (method === 'sodium-silicate') {
+    // Method B
+    const { silicateConc, sodiumSilicateLabel, silicateSuggested, naohLabel, naohSuggested, naohUnit, naohInfo } = computeMethodBSuggestion(totalDye);
+
+    const silicateActualValB = preservedActuals.silicateActualB !== undefined ? preservedActuals.silicateActualB : silicateSuggested;
+    const naohActualValB = preservedActuals.naohActualB !== undefined ? preservedActuals.naohActualB : naohSuggested;
+    const tbody = document.getElementById('alkaliTableBody');
+    tbody.innerHTML = `
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 text-sm font-medium">${sodiumSilicateLabel} ${silicateConc}°Bé</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${silicateSuggested} g/l</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="silicateActualB" value="${silicateActualValB}" step="0.1" min="0" data-suggested="${silicateSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="silicateQtyB">-</td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2">
+                <div class="text-sm font-medium">${naohLabel}</div>
+                ${naohInfo}
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${naohSuggested} ${naohUnit}</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="naohActualB" value="${naohActualValB}" step="0.1" min="0" data-suggested="${naohSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="naohQtyB">-</td>
+        </tr>
+    `;
+    
+    calculateAlkaliQuantities();
+            } else if (method === 'modified-silicate') {
+    // Method C
+    const { silicateConc, sodiumSilicateLabel, silicateSuggested, naohLabel, naohSuggested, naohUnit, naohInfo } = computeMethodCSuggestion(totalDye);
+
+    const silicateActualValC = preservedActuals.silicateActualC !== undefined ? preservedActuals.silicateActualC : silicateSuggested;
+    const naohActualValC = preservedActuals.naohActualC !== undefined ? preservedActuals.naohActualC : naohSuggested;
+    const tbody = document.getElementById('alkaliTableBody');
+    tbody.innerHTML = `
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 text-sm font-medium">${sodiumSilicateLabel} ${silicateConc}°Bé</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${silicateSuggested} g/l</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="silicateActualC" value="${silicateActualValC}" step="0.1" min="0" data-suggested="${silicateSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="silicateQtyC">-</td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2">
+                <div class="text-sm font-medium">${naohLabel}</div>
+                ${naohInfo}
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${naohSuggested} ${naohUnit}</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="naohActualC" value="${naohActualValC}" step="0.1" min="0" data-suggested="${naohSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="naohQtyC">-</td>
+        </tr>
+    `;
+    
+    calculateAlkaliQuantities();
+            } else if (method === 'tropical-region') {
+    // Method D - Tropical Region
+    const { sodaAshLabel, sodaAshSuggested, naohLabel, naohSuggested, naohUnit, naohInfo } = computeMethodDSuggestion(totalDye);
+
+    const sodaAshActualValD = preservedActuals.sodaAshActualD !== undefined ? preservedActuals.sodaAshActualD : sodaAshSuggested;
+    const naohActualValD = preservedActuals.naohActualD !== undefined ? preservedActuals.naohActualD : naohSuggested;
+    const tbody = document.getElementById('alkaliTableBody');
+    tbody.innerHTML = `
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 text-sm">${sodaAshLabel}</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${sodaAshSuggested} g/l</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="sodaAshActualD" value="${sodaAshActualValD}" step="0.1" min="0" data-suggested="${sodaAshSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="sodaAshQtyD">-</td>
+        </tr>
+        <tr class="hover:bg-gray-50">
+            <td class="border border-gray-200 px-3 sm:px-4 py-2">
+                <div class="text-sm font-medium">${naohLabel}</div>
+                ${naohInfo}
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-blue-50 text-sm">${naohSuggested} ${naohUnit}</td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50">
+                <input type="number" id="naohActualD" value="${naohActualValD}" step="0.1" min="0" data-suggested="${naohSuggested}"
+                    oninput="calculateAlkaliQuantities()" 
+                    class="w-full px-2 py-1 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none">
+            </td>
+            <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold text-sm number-display text-right" id="naohQtyD">-</td>
+        </tr>
+    `;
+    
+    calculateAlkaliQuantities();
+            }
+            
+            // Update work order after calculation
+            updateWorkOrder();
+}
+
+    // 「实际配方」偏离「建议配方」过多时的视觉警示(不影响计算结果,只是提醒复核)
+    const ALKALI_DEVIATION_WARN_THRESHOLD = 0.2; // ±20%
+    function applyActualDeviationStyle(inputId) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        const suggested = parseFloat(el.dataset.suggested);
+        const actual = parseFloat(el.value);
+        el.classList.remove('border-red-500', 'bg-red-50', 'border-gray-300');
+        el.title = '';
+        if (!isNaN(suggested) && suggested > 0 && !isNaN(actual)) {
+            const pctDiff = Math.abs(actual - suggested) / suggested;
+            if (pctDiff > ALKALI_DEVIATION_WARN_THRESHOLD) {
+                el.classList.add('border-red-500', 'bg-red-50');
+                const pctText = (pctDiff * 100).toFixed(0) + '%';
+                el.title = currentLang === 'zh'
+                    ? `实际值与建议值相差 ${pctText},请复核`
+                    : `Actual value differs from suggestion by ${pctText} — please double-check`;
+                return;
+            }
+        }
+        el.classList.add('border-gray-300');
+    }
+
+    // Calculate alkali quantities based on actual values
+    function calculateAlkaliQuantities() {
+        const method = document.getElementById('alkaliMethod').value;
+        const alkaliSol = parseFloat(document.getElementById('alkaliSolution').value) || 0;
+        const alkaliType = method === 'silicate-free' ? document.getElementById('alkaliTypeA').value :
+                          (method === 'sodium-silicate' ? document.getElementById('naohConcB').value :
+                          (method === 'modified-silicate' ? document.getElementById('naohConcC').value :
+                          document.getElementById('naohConcD').value));
+        
+        if (method === 'silicate-free') {
+            // Method A
+            const sodaAshActual = parseFloat(document.getElementById('sodaAshActualA')?.value) || 0;
+            const naohActual = parseFloat(document.getElementById('naohActualA')?.value) || 0;
+            applyActualDeviationStyle('sodaAshActualA');
+            applyActualDeviationStyle('naohActualA');
+            
+            const sodaAshQty = sodaAshActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+            document.getElementById('sodaAshQtyA').textContent = formatNumber(sodaAshQty);
+            
+            if (alkaliType === 'flakes') {
+                const naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyA').textContent = formatNumber(naohQty);
+            } else {
+                const naohData = getNaOHData('A');
+                const naohWeight = naohActual * naohData.specWeight;
+                const naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyA').textContent = formatNumber(naohQty);
+            }
+            
+        } else if (method === 'sodium-silicate') {
+            // Method B
+            const silicateActual = parseFloat(document.getElementById('silicateActualB')?.value) || 0;
+            const naohActual = parseFloat(document.getElementById('naohActualB')?.value) || 0;
+            applyActualDeviationStyle('silicateActualB');
+            applyActualDeviationStyle('naohActualB');
+            
+            const silicateQty = silicateActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+            document.getElementById('silicateQtyB').textContent = formatNumber(silicateQty);
+            
+            if (alkaliType === 'flakes') {
+                const naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyB').textContent = formatNumber(naohQty);
+            } else {
+                const naohData = getNaOHData('B');
+                const naohWeight = naohActual * naohData.specWeight;
+                const naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyB').textContent = formatNumber(naohQty);
+            }
+            
+        } else if (method === 'modified-silicate') {
+            // Method C
+            const silicateActual = parseFloat(document.getElementById('silicateActualC')?.value) || 0;
+            const naohActual = parseFloat(document.getElementById('naohActualC')?.value) || 0;
+            applyActualDeviationStyle('silicateActualC');
+            applyActualDeviationStyle('naohActualC');
+            
+            const silicateQty = silicateActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+            document.getElementById('silicateQtyC').textContent = formatNumber(silicateQty);
+            
+            if (alkaliType === 'flakes') {
+                const naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyC').textContent = formatNumber(naohQty);
+            } else {
+                const naohData = getNaOHData('C');
+                const naohWeight = naohActual * naohData.specWeight;
+                const naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyC').textContent = formatNumber(naohQty);
+            }
+            
+        } else if (method === 'tropical-region') {
+            // Method D
+            const sodaAshActual = parseFloat(document.getElementById('sodaAshActualD')?.value) || 0;
+            const naohActual = parseFloat(document.getElementById('naohActualD')?.value) || 0;
+            applyActualDeviationStyle('sodaAshActualD');
+            applyActualDeviationStyle('naohActualD');
+            
+            const sodaAshQty = sodaAshActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+            document.getElementById('sodaAshQtyD').textContent = formatNumber(sodaAshQty);
+            
+            if (alkaliType === 'flakes') {
+                const naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyD').textContent = formatNumber(naohQty);
+            } else {
+                const naohData = getNaOHData('D');
+                const naohWeight = naohActual * naohData.specWeight;
+                const naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                document.getElementById('naohQtyD').textContent = formatNumber(naohQty);
+            }
+        }
+        
+        // Update work order after quantity calculation
+        updateWorkOrder();
+}
+
+        // 更新「目前使用方法」提示 — 因为方法/NaOH类型的选择区已经搬到染料配方前面,
+        // 这里加一个简短提示,让人滑到碱剂配方表格时不必往上滑就知道现在用的是哪个方法、哪种 NaOH 类型
+        function updateCurrentMethodBanner() {
+            const banner = document.getElementById('currentMethodBanner');
+            if (!banner) return;
+            const method = document.getElementById('alkaliMethod').value;
+            const t2 = translations[currentLang];
+            const methodNames = {
+                'silicate-free': t2.methodA,
+                'sodium-silicate': t2.methodB,
+                'modified-silicate': t2.methodC,
+                'tropical-region': t2.methodD
+            };
+            const typeSelectId = method === 'silicate-free' ? 'alkaliTypeA' :
+                                  method === 'sodium-silicate' ? 'naohConcB' :
+                                  method === 'modified-silicate' ? 'naohConcC' : 'naohConcD';
+            const typeVal = document.getElementById(typeSelectId).value;
+            let typeLabel;
+            if (typeVal === 'custom') {
+                typeLabel = currentLang === 'zh' ? '自定义波美度' : 'Custom Baumé';
+            } else if (typeVal === 'flakes') {
+                typeLabel = 'NaOH ' + (currentLang === 'zh' ? '片碱' : 'Flakes');
+            } else {
+                typeLabel = `NaOH ${typeVal}°Bé`;
+            }
+            const prefix = currentLang === 'zh' ? '目前使用: ' : 'Currently using: ';
+            banner.textContent = `${prefix}${methodNames[method]} · ${typeLabel}`;
+        }
+
+        // Update Work Order Summary - Fixed format with 4 dye rows + 3 auxiliary rows
+        function updateWorkOrder() {
+            updateCurrentMethodBanner();
+            renderAlkaliBasisTable();
+            const t = translations[currentLang];
+            
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('woDate').textContent = dateStr;
+            
+            // Customer information
+const customer = document.getElementById('customerName')?.value || '-';
+const colorOrder = document.getElementById('colorOrder')?.value || '-';
+const fabricType = document.getElementById('fabricType')?.value || '-';
+const batchTime = document.getElementById('batchTime')?.value || '20';
+
+document.getElementById('woCustomer').textContent = customer;
+document.getElementById('woColorOrder').textContent = colorOrder;
+document.getElementById('woFabricType').textContent = fabricType;
+document.getElementById('woBatchTime').textContent = batchTime + ' ' + (currentLang === 'zh' ? '小时' : 'hrs');
+            
+            const mode = document.querySelector('input[name="fabricMode"]:checked').value;
+            let fabricQty;
+            if (mode === 'direct') {
+                fabricQty = parseFloat(document.getElementById('fabricQuantity').value) || 0;
+            } else {
+                const weight = parseFloat(document.getElementById('fabricWeight').value) || 0;
+                const length = parseFloat(document.getElementById('fabricLength').value) || 0;
+                fabricQty = weight * length / 1000;
+            }
+            document.getElementById('woFabric').textContent = formatNumber(fabricQty) + ' kg';
+            
+            const pickUp = parseFloat(document.getElementById('pickUp').value) || 0;
+            document.getElementById('woPickup').textContent = pickUp + '%';
+            
+            const method = document.getElementById('alkaliMethod').value;
+            const methodNames = {
+                'silicate-free': t.methodA,
+                'sodium-silicate': t.methodB,
+                'modified-silicate': t.methodC,
+                'tropical-region': t.methodD
+            };
+            document.getElementById('woMethod').textContent = methodNames[method];
+            
+            // Calculate theoretical solution
+            const theoretical = fabricQty * pickUp / 100;
+            const theoreticalDye = theoretical * DYE_ALKALI_RATIO / (DYE_ALKALI_RATIO + 1);
+            const theoreticalAlkali = theoretical * 1 / (DYE_ALKALI_RATIO + 1);
+            
+            // Get actual solutions
+            const dyeSol = parseFloat(document.getElementById('dyeSolution').value) || 0;
+            const alkaliSol = parseFloat(document.getElementById('alkaliSolution').value) || 0;
+            const totalActual = dyeSol + alkaliSol;
+            
+            // Calculate differences
+            const dyeDiff = dyeSol - theoreticalDye;
+            const alkaliDiff = alkaliSol - theoreticalAlkali;
+            const totalDiff = totalActual - theoretical;
+            
+            const dyeLabel = currentLang === 'zh' ? '染料' : 'Dye';
+            const alkaliLabel = currentLang === 'zh' ? '碱剂' : 'Alkali';
+            
+            document.getElementById('woTotalSol').innerHTML = `
+                <div>${formatNumber(theoretical)} ltr</div>
+            `;
+            document.getElementById('woTheoreticalNote').innerHTML = `
+                <span>${dyeLabel} ${formatNumber(theoreticalDye)}</span>
+                <span>${alkaliLabel} ${formatNumber(theoreticalAlkali)}</span>
+            `;
+            document.getElementById('woDyeSol').innerHTML = `
+                <div>${formatNumber(dyeSol)} ltr</div>
+                <div class="text-xs ${dyeDiff >= 0 ? 'text-gray-600' : 'text-red-600'}">(${dyeDiff >= 0 ? '+' : ''}${formatNumber(dyeDiff)})</div>
+            `;
+            document.getElementById('woAlkaliSol').innerHTML = `
+                <div>${formatNumber(alkaliSol)} ltr</div>
+                <div class="text-xs ${alkaliDiff >= 0 ? 'text-gray-600' : 'text-red-600'}">(${alkaliDiff >= 0 ? '+' : ''}${formatNumber(alkaliDiff)})</div>
+            `;
+            
+            // Populate dye table - FIXED FORMAT: Always 4 dye rows + total + 3 auxiliary rows
+            const dyeTableBody = document.getElementById('woDyeTable');
+            dyeTableBody.innerHTML = '';
+            
+            const dyeInputs = document.querySelectorAll('.dye-recipe');
+            const dyeNames = document.querySelectorAll('#dyeTableBody tr:not(.bg-gray-100):not(.bg-blue-50) input[type="text"]');
+            let totalDyeConc = 0;
+            
+            // Always show 4 dye rows (even if empty)
+            for (let i = 0; i < 4; i++) {
+                const recipe = parseFloat(dyeInputs[i]?.value) || 0;
+                const name = dyeNames[i]?.value || '-';
+                const motherLiquorConc = recipe * MOTHER_LIQUOR_DYE_MULTIPLIER;
+                const quantity = motherLiquorConc * dyeSol;
+                totalDyeConc += recipe;
+                
+                dyeTableBody.innerHTML += `
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${name}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${recipe > 0 ? formatNumber(recipe) : '-'}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${recipe > 0 ? formatNumber(quantity) : '-'}</td>
+                    </tr>
+                `;
+            }
+            
+            // Add total dye row
+            const totalLabel = currentLang === 'zh' ? '总计:' : 'Total:';
+            dyeTableBody.innerHTML += `
+                <tr class="bg-gray-100 font-bold">
+                    <td class="border border-gray-300 px-2 sm:px-3 py-2"></td>
+                    <td class="border border-gray-300 px-2 sm:px-3 py-2">${totalLabel} ${formatNumberPlain(totalDyeConc)} g/l</td>
+                    <td class="border border-gray-300 px-2 sm:px-3 py-2"></td>
+                </tr>
+            `;
+            
+            // Always show 3 auxiliary rows (even if empty)
+            const auxInputs = document.querySelectorAll('.aux-recipe');
+            const auxNames = document.querySelectorAll('#dyeTableBody tr.bg-blue-50 ~ tr input[type="text"]');
+            
+            for (let i = 0; i < 3; i++) {
+                const recipe = parseFloat(auxInputs[i]?.value) || 0;
+                const name = auxNames[i]?.value || '-';
+                const motherLiquorConc = recipe * MOTHER_LIQUOR_DYE_MULTIPLIER;
+                const quantity = motherLiquorConc * dyeSol;
+                
+                dyeTableBody.innerHTML += `
+                    <tr class="bg-blue-50">
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${name}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${recipe > 0 ? formatNumber(recipe) : '-'}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${recipe > 0 ? formatNumber(quantity) : '-'}</td>
+                    </tr>
+                `;
+            }
+            
+// Populate alkali table - read actual values and display as text
+            const alkaliTableBody = document.getElementById('woAlkaliTable');
+            // alkaliSol already declared above, use existing variable
+            
+            let alkaliRows = '';
+            
+            if (method === 'silicate-free') {
+                // Method A
+                const totalDyeForWO = parseFloat(document.getElementById('totalDyeConc')?.textContent) || 0;
+                const { alkaliType, naohData, sodaAshLabel, sodaAshSuggested, naohLabel, naohSuggested, naohUnit } = computeMethodASuggestion(totalDyeForWO);
+                const sodaAshActual = parseFloat(document.getElementById('sodaAshActualA')?.value) || sodaAshSuggested;
+                const sodaAshQty = sodaAshActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                
+                const naohActual = parseFloat(document.getElementById('naohActualA')?.value) || 0;
+                let naohQty;
+                if (alkaliType === 'flakes') {
+                    naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                } else {
+                    const naohWeight = naohActual * naohData.specWeight;
+                    naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                }
+                
+                // 工卡只显示实际配方(执行用),建议值移到表格上方当附注,方便日后回溯比对
+                document.getElementById('woAlkaliSuggestedNote').textContent =
+                    (currentLang === 'zh' ? '建议配方参考: ' : 'Suggested reference: ')
+                    + `${sodaAshLabel} ${sodaAshSuggested} g/l · ${naohLabel} ${naohSuggested} ${naohUnit}`;
+                
+                let actualDisplay, qtyDisplay;
+                if (alkaliType === 'flakes') {
+                    actualDisplay = `${formatNumber(naohActual)} g/l`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                } else {
+                    const actualWeight = (naohActual * naohData.specWeight).toFixed(1);
+                    actualDisplay = `${formatNumber(naohActual)} ml/l<div class="text-xs text-blue-600">= ${formatNumber(parseFloat(actualWeight))} g/l</div>`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                }
+                
+                alkaliRows = `
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${sodaAshLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${formatNumber(sodaAshActual)} g/l</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${formatNumber(sodaAshQty)} g</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${naohLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${actualDisplay}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${qtyDisplay}</td>
+                    </tr>
+                `;
+                
+            } else if (method === 'sodium-silicate') {
+                // Method B
+                const totalDye = parseFloat(document.getElementById('totalDyeConc')?.textContent) || 0;
+                const { naohConc, naohData, silicateConc, silicateSuggested, naohLabel, naohSuggested, naohUnit } = computeMethodBSuggestion(totalDye);
+                const silicateActual = parseFloat(document.getElementById('silicateActualB')?.value) || silicateSuggested;
+                const silicateQty = silicateActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                
+                const naohActual = parseFloat(document.getElementById('naohActualB')?.value) || 0;
+                let naohQty;
+                if (naohConc === 'flakes') {
+                    naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                } else {
+                    const naohWeight = naohActual * naohData.specWeight;
+                    naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                }
+                
+                const sodiumSilicateLabel = currentLang === 'zh' ? '硅酸钠' : 'Sodium Silicate';
+                const silicateItemLabel = `${sodiumSilicateLabel} ${silicateConc}°Bé`;
+                
+                document.getElementById('woAlkaliSuggestedNote').textContent =
+                    (currentLang === 'zh' ? '建议配方参考: ' : 'Suggested reference: ')
+                    + `${silicateItemLabel} ${silicateSuggested} g/l · ${naohLabel} ${naohSuggested} ${naohUnit}`;
+                
+                let actualDisplay, qtyDisplay;
+                if (naohConc === 'flakes') {
+                    actualDisplay = `${formatNumber(naohActual)} g/l`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                } else {
+                    const actualWeight = (naohActual * naohData.specWeight).toFixed(1);
+                    actualDisplay = `${formatNumber(naohActual)} ml/l<div class="text-xs text-blue-600">= ${formatNumber(parseFloat(actualWeight))} g/l</div>`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                }
+                
+                alkaliRows = `
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${silicateItemLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${formatNumber(silicateActual)} g/l</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${formatNumber(silicateQty)} g</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${naohLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${actualDisplay}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${qtyDisplay}</td>
+                    </tr>
+                `;
+                
+            } else if (method === 'modified-silicate') {
+                // Method C
+                const totalDye = parseFloat(document.getElementById('totalDyeConc')?.textContent) || 0;
+                const { naohConc, naohData, silicateConc, silicateSuggested, naohLabel, naohSuggested, naohUnit } = computeMethodCSuggestion(totalDye);
+                const silicateActual = parseFloat(document.getElementById('silicateActualC')?.value) || silicateSuggested;
+                const silicateQty = silicateActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                
+                const naohActual = parseFloat(document.getElementById('naohActualC')?.value) || 0;
+                let naohQty;
+                if (naohConc === 'flakes') {
+                    naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                } else {
+                    const naohWeight = naohActual * naohData.specWeight;
+                    naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                }
+                
+                const sodiumSilicateLabel = currentLang === 'zh' ? '硅酸钠' : 'Sodium Silicate';
+                const silicateItemLabel = `${sodiumSilicateLabel} ${silicateConc}°Bé`;
+                
+                document.getElementById('woAlkaliSuggestedNote').textContent =
+                    (currentLang === 'zh' ? '建议配方参考: ' : 'Suggested reference: ')
+                    + `${silicateItemLabel} ${silicateSuggested} g/l · ${naohLabel} ${naohSuggested} ${naohUnit}`;
+                
+                let actualDisplay, qtyDisplay;
+                if (naohConc === 'flakes') {
+                    actualDisplay = `${formatNumber(naohActual)} g/l`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                } else {
+                    const actualWeight = (naohActual * naohData.specWeight).toFixed(1);
+                    actualDisplay = `${formatNumber(naohActual)} ml/l<div class="text-xs text-blue-600">= ${formatNumber(parseFloat(actualWeight))} g/l</div>`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                }
+                
+                alkaliRows = `
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${silicateItemLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${formatNumber(silicateActual)} g/l</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${formatNumber(silicateQty)} g</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${naohLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${actualDisplay}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${qtyDisplay}</td>
+                    </tr>
+                `;
+                
+            } else if (method === 'tropical-region') {
+                // Method D
+                const totalDye = parseFloat(document.getElementById('totalDyeConc')?.textContent) || 0;
+                const { naohConc, naohData, sodaAshLabel, sodaAshSuggested, naohLabel, naohSuggested, naohUnit } = computeMethodDSuggestion(totalDye);
+                const sodaAshActual = parseFloat(document.getElementById('sodaAshActualD')?.value) || sodaAshSuggested;
+                const sodaAshQty = sodaAshActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                
+                const naohActual = parseFloat(document.getElementById('naohActualD')?.value) || 0;
+                let naohQty;
+                if (naohConc === 'flakes') {
+                    naohQty = naohActual * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                } else {
+                    const naohWeight = naohActual * naohData.specWeight;
+                    naohQty = naohWeight * MOTHER_LIQUOR_ALKALI_MULTIPLIER * alkaliSol;
+                }
+                
+                document.getElementById('woAlkaliSuggestedNote').textContent =
+                    (currentLang === 'zh' ? '建议配方参考: ' : 'Suggested reference: ')
+                    + `${sodaAshLabel} ${sodaAshSuggested} g/l · ${naohLabel} ${naohSuggested} ${naohUnit}`;
+                
+                let actualDisplay, qtyDisplay;
+                if (naohConc === 'flakes') {
+                    actualDisplay = `${formatNumber(naohActual)} g/l`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                } else {
+                    const actualWeight = (naohActual * naohData.specWeight).toFixed(1);
+                    actualDisplay = `${formatNumber(naohActual)} ml/l<div class="text-xs text-blue-600">= ${formatNumber(parseFloat(actualWeight))} g/l</div>`;
+                    qtyDisplay = `${formatNumber(naohQty)} g`;
+                }
+                
+                alkaliRows = `
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${sodaAshLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${formatNumber(sodaAshActual)} g/l</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${formatNumber(sodaAshQty)} g</td>
+                    </tr>
+                    <tr>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${naohLabel}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2">${actualDisplay}</td>
+                        <td class="border border-gray-300 px-2 sm:px-3 py-2 font-semibold">${qtyDisplay}</td>
+                    </tr>
+                `;
+            }
+            
+            alkaliTableBody.innerHTML = alkaliRows;
+            
+            // Update solution amounts in recipe headers
+            document.getElementById('woDyeSolAmount').textContent = formatNumber(dyeSol);
+            document.getElementById('woAlkaliSolAmount').textContent = formatNumber(alkaliSol);
+        }
+
+        // Initialize
+        updateRecipeList();
+
+        // 全域防呆:min="0" 这类 HTML 属性只会让浏览器把栏位标成 :invalid(样式提示),
+        // 并不会真的阻止使用者直接打出超出范围的数字,inline oninput 还是会照样把负数拿去算,
+        // 算出负的溶液量、负的用量。这里在 capture 阶段(比 inline oninput 更早执行)先把
+        // 数值夹回 min/max 范围内,确保 calculate() 看到的一定是合法数字。
+        document.addEventListener('input', function(e) {
+            const el = e.target;
+            // customBaume 系列欄位有自己專屬的驗證/警示邏輯(見 updateCustomNaOH),
+            // 不要在這裡先幫它夾值,否則「超出範圍」的警示訊息永遠不會被觸發
+            if (el.tagName === 'INPUT' && el.type === 'number' && el.value !== '' && !isNaN(el.value)
+                && !el.id.startsWith('customBaume')) {
+                const val = parseFloat(el.value);
+                if (el.min !== '' && !isNaN(parseFloat(el.min)) && val < parseFloat(el.min)) {
+                    el.value = el.min;
+                } else if (el.max !== '' && !isNaN(parseFloat(el.max)) && val > parseFloat(el.max)) {
+                    el.value = el.max;
+                }
+            }
+        }, true);
+
+        calculate();
+        updateWorkOrder();
+
+        // 注册 service worker,让工具可以离线使用、加到手机主画面。
+        // 用 try/catch 包起来,就算浏览器不支援(极少数旧浏览器)也不会让整个工具坏掉。
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js').catch((err) => {
+                    console.warn('Service worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
