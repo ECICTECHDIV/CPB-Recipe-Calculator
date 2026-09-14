@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CPB試染工具</title>
+
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563A6">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="CPB試染工具">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --ink: #1C1B19;
+            --ink-muted: #6B6862;
+            --ink-faint: #A6A29A;
+            --paper: #FFFFFF;
+            --surface: #F7F6F3;
+            --border: #E3E1DC;
+            --border-strong: #C9C6BF;
+            --red: #C8331F;
+            --red-soft: #FBEAE7;
+            --blue: #2563A6;
+            --blue-soft: #E9F1FA;
+            --teal: #1F8A7A;
+            --teal-soft: #E6F5F2;
+            --orange: #D97B2B;
+            --orange-soft: #FBEFDF;
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 14px;
+            --font-ui: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+            --font-num: "IBM Plex Mono", "Source Code Pro", ui-monospace, monospace;
+            font-size: clamp(17px, 15.7px + 0.17vw, 19px);
+        }
+        body {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            color: var(--ink);
+            background: var(--surface);
+        }
+
+        .shell { max-width: clamp(760px, 90vw, 1280px); margin: 0 auto; padding: 0 16px; }
+        @media (min-width: 640px) { .shell { padding: 0 24px; } }
+        
+        header.top { background: var(--paper); border-bottom: 1px solid var(--border); padding: 1rem 1rem; }
+        @media (min-width: 640px) { header.top { padding: 1.5rem 1.5rem; } }
+        header.top .head-row { display: flex; align-items: center; gap: 14px; max-width: clamp(760px, 90vw, 1280px); margin: 0 auto; }
+        header.top .head-accent-bar { flex: 0 0 auto; align-self: stretch; width: 4px; min-height: 44px; background: var(--blue); border-radius: 2px; }
+        header.top .head-titles { flex: 1 1 auto; min-width: 0; }
+        header.top h1 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -.01em; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        @media (min-width: 640px) { header.top h1 { font-size: 1.875rem; } }
+        header.top .head-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        header.top .head-actions button.share-btn { appearance: none; border: 1px solid var(--border-strong); background: var(--paper); color: var(--ink-muted); min-width: 36px; height: 36px; padding: 0 8px; border-radius: 999px; font-size: .76rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; white-space: nowrap; gap: 4px; transition: background 0.15s; }
+        header.top .head-actions button.share-btn svg { width: 17px; height: 17px; flex-shrink: 0; }
+        header.top .head-actions button.share-btn:active { background: var(--surface); }
+        .lang-seg-wrap { display: inline-flex; border-radius: 999px; overflow: hidden; border: 1.5px solid var(--blue); flex-shrink: 0; }
+        header.top .head-actions .lang-seg-wrap .lang-seg-btn { padding: 7px 14px; font-size: .78rem; font-weight: 700; background: var(--paper); color: var(--blue); border: none; border-radius: 0; cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+        header.top .head-actions .lang-seg-wrap .lang-seg-btn + .lang-seg-btn { border-left: 1.5px solid var(--blue); }
+        header.top .head-actions .lang-seg-wrap .lang-seg-btn.active { background: var(--blue); color: #fff; }
+        
+        .top-bar-label { display: block; font-size: .82rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 4px; }
+        .top-bar-slim { padding: 1rem 1rem 0; margin-bottom: 1.25rem; }
+        @media (min-width: 640px) { .top-bar-slim { padding: 1.5rem 1.5rem 0; margin-bottom: 1.5rem; } }
+        .top-bar-slim .shell { padding: 12px 14px; background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-lg); }
+        .top-bar-slim-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 640px) { .top-bar-slim-grid { grid-template-columns: 1fr 1fr; gap: 16px; } }
+        .top-bar-slim-row { display: flex; gap: 8px; }
+        .top-bar-slim select, .top-bar-slim input[type=text] { flex: 1 1 auto; min-width: 0; padding: 9px 10px; font-size: .9rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: #fff; }
+        .top-bar-slim .btn-sm { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid var(--blue); background: var(--blue); color: #fff; cursor: pointer; transition: background 0.15s; }
+        .top-bar-slim .btn-sm svg { width: 18px; height: 18px; flex-shrink: 0; }
+        .top-bar-slim .btn-sm.danger { border-color: var(--red); background: var(--red); color: #fff; }
+        .top-bar-slim .btn-sm:active { filter: brightness(0.9); }
+
+        [class*="bg-gradient-to-"] { background-image: none !important; }
+        .from-gray-50, .to-gray-100, .from-teal-50, .to-cyan-50 { --tw-gradient-from: transparent; --tw-gradient-to: transparent; }
+
+        .shadow, .shadow-xl { box-shadow: none !important; }
+        .shadow-2xl { box-shadow: 0 8px 28px rgba(28, 27, 25, 0.14) !important; }
+        .rounded { border-radius: var(--radius-sm) !important; }
+        .rounded-lg { border-radius: var(--radius-md) !important; }
+        .rounded-xl { border-radius: var(--radius-lg) !important; }
+
+        .bg-white { background-color: var(--paper) !important; }
+        .bg-gray-50, .bg-gray-100 { background-color: var(--surface) !important; }
+        .bg-gray-200 { background-color: var(--border) !important; }
+        .bg-gray-500 { background-color: var(--ink-muted) !important; }
+        .text-gray-300, .text-gray-400 { color: var(--ink-faint) !important; }
+        .text-gray-500, .text-gray-600 { color: var(--ink-muted) !important; }
+        .text-gray-700, .text-gray-800 { color: var(--ink) !important; }
+        .border-gray-200, .border-gray-100, .border-blue-100 { border-color: var(--border) !important; }
+        .border-gray-300 { border-color: var(--border-strong) !important; }
+
+        .bg-blue-50, .bg-blue-100, .bg-indigo-50 { background-color: var(--blue-soft) !important; }
+        .bg-blue-500, .bg-blue-600, .bg-blue-700, .bg-indigo-500 { background-color: var(--blue) !important; }
+        .text-blue-500, .text-blue-600, .text-blue-700, .text-blue-800, .text-indigo-600, .text-indigo-800 { color: var(--blue) !important; }
+        .border-blue-200, .border-blue-500 { border-color: var(--blue) !important; }
+        .hover\:bg-blue-100:hover { background-color: var(--blue-soft) !important; }
+        .hover\:bg-blue-500:hover, .hover\:bg-blue-600:hover, .hover\:bg-blue-700:hover { background-color: color-mix(in srgb, var(--blue) 85%, black) !important; }
+        .hover\:text-blue-500:hover { color: var(--blue) !important; }
+
+        .bg-red-50 { background-color: var(--red-soft) !important; }
+        .bg-red-500, .bg-red-600 { background-color: var(--red) !important; }
+        .text-red-600, .text-red-700 { color: var(--red) !important; }
+        .border-red-500 { border-color: var(--red) !important; }
+        .hover\:bg-red-600:hover { background-color: color-mix(in srgb, var(--red) 85%, black) !important; }
+
+        .bg-green-50, .bg-green-100, .bg-emerald-50, .bg-emerald-100 { background-color: var(--teal-soft) !important; }
+        .bg-green-500, .bg-green-600, .bg-green-700, .bg-teal-500 { background-color: var(--teal) !important; }
+        .text-green-600, .text-green-700, .text-green-800, .text-teal-600 { color: var(--teal) !important; }
+        .border-green-200, .border-green-500 { border-color: var(--teal) !important; }
+        .hover\:bg-green-700:hover { background-color: color-mix(in srgb, var(--teal) 85%, black) !important; }
+
+        .bg-amber-50, .bg-yellow-50, .bg-amber-100 { background-color: var(--orange-soft) !important; }
+        .bg-amber-500, .bg-amber-600, .bg-yellow-500 { background-color: var(--orange) !important; }
+        .text-amber-500, .text-amber-700, .text-amber-800 { color: var(--orange) !important; }
+        .border-amber-300 { border-color: var(--orange) !important; }
+        .hover\:bg-amber-600:hover { background-color: color-mix(in srgb, var(--orange) 85%, black) !important; }
+
+        .bg-purple-50, .bg-purple-100, .bg-indigo-100 { background-color: var(--orange-soft) !important; }
+        .bg-purple-500, .bg-purple-600, .bg-purple-700 { background-color: var(--orange) !important; }
+        .text-purple-700 { color: var(--orange) !important; }
+        .border-purple-400, .border-indigo-200 { border-color: var(--orange) !important; }
+        .hover\:bg-purple-700:hover { background-color: color-mix(in srgb, var(--orange) 85%, black) !important; }
+        .hover\:bg-purple-100:hover { background-color: var(--orange-soft) !important; }
+
+        .hover\:bg-gray-50:hover, .hover\:bg-gray-200:hover { background-color: var(--surface) !important; }
+
+        .bg-rose-50 { background-color: var(--red-soft) !important; }
+        .bg-rose-500 { background-color: var(--red) !important; }
+        .bg-cyan-500 { background-color: var(--teal) !important; }
+        .text-rose-700, .text-rose-800 { color: var(--red) !important; }
+        .border-rose-200 { border-color: var(--red) !important; }
+
+        .section-card {
+            background: var(--paper);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            border: 1px solid var(--border);
+        }
+        
+        @media (min-width: 640px) {
+            .section-card {
+                padding: 1.5rem;
+            }
+        }
+        
+        .section-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            letter-spacing: -0.01em;
+        }
+        
+        @media (min-width: 640px) {
+            .section-header {
+                font-size: 1.25rem;
+                margin-bottom: 1.25rem;
+            }
+        }
+        
+        .input-field {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+            color: var(--ink);
+            background: var(--paper);
+        }
+        input[type="number"].input-field {
+            font-family: var(--font-num);
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-soft);
+        }
+        
+        .input-field::placeholder {
+            color: var(--ink-faint);
+            font-weight: 400;
+            font-family: var(--font-ui);
+        }
+        
+        @media (min-width: 640px) {
+            .input-field {
+                padding: 0.75rem 1rem;
+                font-size: 0.9375rem;
+            }
+        }
+        
+        .input-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--ink-muted);
+            letter-spacing: -0.01em;
+        }
+        
+        @media (min-width: 640px) {
+            .input-label {
+                font-size: 0.875rem;
+            }
+        }
+        
+        .info-box {
+            padding: 0.75rem;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            border: 1px solid;
+            font-weight: 500;
+        }
+        
+        @media (min-width: 640px) {
+            .info-box {
+                padding: 0.875rem 1rem;
+            }
+        }
+        
+        table {
+            font-size: 0.875rem;
+        }
+        
+        .table-header {
+            background: var(--surface);
+            font-weight: 600;
+            font-size: 0.8125rem;
+            color: var(--ink-muted);
+            letter-spacing: 0.025em;
+        }
+        
+        @media (min-width: 640px) {
+            .table-header {
+                font-size: 0.875rem;
+            }
+        }
+        
+        @media (max-width: 639px) {
+            #dyeAuxTable thead th {
+                font-size: 0.72rem !important;
+                letter-spacing: 0 !important;
+                padding-left: 4px !important;
+                padding-right: 4px !important;
+            }
+        }
+        
+        table td {
+            font-size: 0.875rem;
+            color: var(--ink);
+        }
+        
+        table td input {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        table td.font-semibold {
+            font-weight: 600;
+            color: var(--ink);
+        }
+        
+        .number-display {
+            font-variant-numeric: tabular-nums;
+            font-family: var(--font-num);
+            font-weight: 600;
+        }
+        table td input[type="number"] {
+            font-family: var(--font-num);
+        }
+        
+        .dye-quantity, .aux-quantity {
+            overflow-wrap: break-word;
+            word-break: break-word;
+            line-height: 1.25;
+        }
+        @media (max-width: 480px) {
+            .dye-quantity, .aux-quantity {
+                font-size: 0.8rem;
+            }
+        }
+        .tooltip {
+            position: absolute;
+            display: none;
+            z-index: 1000;
+        }
+        .tooltip.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .tooltip {
+                position: fixed;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%);
+                width: 90vw !important;
+                max-width: 320px;
+            }
+            input[type="number"], input[type="text"], select {
+                font-size: 16px;
+            }
+            body {
+                font-size: 15px;
+            }
+            .section-card {
+                padding: 1rem;
+            }
+            .section-header {
+                font-size: 1.125rem;
+                margin-bottom: 0.875rem;
+            }
+            table {
+                font-size: 0.8125rem;
+            }
+            .input-field {
+                padding: 0.75rem;
+                font-size: 16px;
+            }
+            
+            #dyeTableBody input[type="text"],
+            #dyeTableBody input[type="number"] {
+                font-size: 14px !important;
+                padding: 0.375rem !important;
+            }
+            
+            #dyeTableBody td:first-child {
+                width: 35% !important;
+            }
+            
+            #dyeTableBody input[type="text"] {
+                font-size: 13px !important;
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--surface);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-strong);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--ink-muted);
+        }
+        .hidden {
+            display: none;
+        }
+        
+        #naohTable table, #alkaliBasisTable table {
+            min-width: 400px;
+        }
+        
+        .add-row-btn {
+            color: var(--blue);
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 10px;
+        }
+        .add-row-btn:hover {
+            color: color-mix(in srgb, var(--blue) 80%, black);
+            text-decoration: underline;
+        }
+        .del-row-btn {
+            color: var(--red);
+            font-weight: 600;
+            font-size: 0.85rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 10px;
+            margin-left: 6px;
+        }
+        .del-row-btn:hover {
+            color: color-mix(in srgb, var(--red) 80%, black);
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 639px) {
+            #alkaliTableWrapper table {
+                min-width: 0 !important;
+                width: 100%;
+            }
+            #alkaliTableWrapper thead {
+                display: none;
+            }
+            #alkaliTableWrapper tbody,
+            #alkaliTableWrapper tr,
+            #alkaliTableWrapper td {
+                display: block;
+                width: 100%;
+            }
+            #alkaliTableWrapper tr {
+                margin-bottom: 12px;
+                border: 1px solid var(--border);
+                border-radius: var(--radius-md);
+                overflow: hidden;
+            }
+            #alkaliTableWrapper tr:last-child {
+                margin-bottom: 0;
+            }
+            #alkaliTableWrapper td {
+                border: none !important;
+                border-bottom: 1px solid var(--border) !important;
+            }
+            #alkaliTableWrapper td:last-child {
+                border-bottom: none !important;
+            }
+            #alkaliTableWrapper td:first-child {
+                background: var(--surface);
+                font-weight: 600;
+            }
+            #alkaliTableWrapper td:not(:first-child) {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+            }
+            #alkaliTableWrapper td:not(:first-child)::before {
+                content: attr(data-label);
+                font-size: 0.72rem;
+                font-weight: 600;
+                color: var(--ink-muted);
+                flex-shrink: 0;
+            }
+            #alkaliTableWrapper td input[type="number"] {
+                max-width: 130px;
+                text-align: right;
+            }
+        }
+        input[type="number"], input[type="text"], select {
+            transition: all 0.2s ease;
+        }
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-soft);
+        }
+        .section-card {
+            transition: border-color 0.2s ease;
+        }
+        .section-card:hover {
+            border-color: var(--border-strong);
+        }
+        
+        .page-tabs {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 41;
+        }
+        .page-tabs-inner {
+            display: flex;
+            gap: 2px;
+            max-width: clamp(760px, 90vw, 1280px);
+            margin: 0 auto;
+            padding: 0 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .page-tabs-inner::-webkit-scrollbar { display: none; }
+        .page-tab-btn {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            padding: 10px 4px 9px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--ink-muted);
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.15s ease, border-color 0.15s ease;
+        }
+        .page-tab-btn svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+        }
+        @media (max-width: 340px) {
+            .page-tab-btn svg { display: none; }
+        }
+        .page-tab-btn:hover:not(.active) {
+            color: var(--ink);
+        }
+        .page-tab-btn.active {
+            color: var(--blue);
+            border-bottom-color: var(--blue);
+        }
+        
+        @media print {
+            .page-tabs { display: none !important; }
+        }
+        
+        .quick-nav {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+        }
+        .quick-nav-inner {
+            display: flex;
+            justify-content: center;
+            flex-wrap: nowrap;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 10px 16px;
+            max-width: clamp(760px, 90vw, 1280px);
+            margin: 0 auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .quick-nav-inner::-webkit-scrollbar { display: none; }
+        .quick-nav-btn {
+            flex: 0 0 auto;
+            white-space: nowrap;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--border-strong);
+            background: var(--paper);
+            color: var(--ink-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .quick-nav-btn:hover:not(:disabled):not(.active) {
+            border-color: var(--ink-faint);
+            background: var(--surface);
+        }
+        .quick-nav-btn.active {
+            background: var(--blue);
+            border-color: var(--blue);
+            color: #fff;
+        }
+        .quick-nav-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        @media print {
+            .quick-nav { display: none !important; }
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        table th, table td {
+            border: 1px solid var(--border);
+        }
+        table th:first-child, table td:first-child {
+            border-left: 1px solid var(--border);
+        }
+        table thead tr:first-child th:first-child {
+            border-top-left-radius: 0.375rem;
+        }
+        table thead tr:first-child th:last-child {
+            border-top-right-radius: 0.375rem;
+        }
+        @media (min-width: 640px) {
+            .grid-responsive {
+                display: grid;
+                gap: 1rem;
+            }
+        }
+        @media print {
+            body {
+                background: white;
+            }
+            .print\:hidden {
+                display: none !important;
+            }
+            #formTabPanel, #pretreatmentTabPanel, #washingTabPanel, #resultTabPanel { display: none !important; }
+            #cardTabPanel { display: block !important; }
+            #cardTabPrompt { display: none !important; }
+            #workOrderSection {
+                box-shadow: none;
+                border: none !important;
+                max-width: 100%;
+                margin: 0;
+                padding: 4mm;
+            }
+            #workOrderSection table,
+            #workOrderSection .grid.grid-cols-2,
+            #woResultPhotosGrid > div {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .print-page-break {
+                page-break-before: always;
+                break-before: page;
+            }
+            @page {
+                size: A4;
+                margin: 6mm;
+            }
+        }
+        
+        #workOrderSection {
+            background: white;
+            box-sizing: border-box;
+        }
+        
+        @media (min-width: 769px) {
+            #workOrderSection {
+                width: 210mm;
+                max-width: 210mm;
+                min-height: 297mm;
+            }
+            #workOrderSection .mb-4.p-4 .flex {
+                align-items: flex-start;
+            }
+            #workOrderSection .mb-4.p-4 .w-20 {
+                width: 6.5rem;
+                flex-shrink: 0;
+            }
+            #workOrderSection .mb-4.p-4 {
+                padding: 1rem;
+            }
+            #workOrderSection .mb-4 .grid {
+                gap: 0.75rem 2rem;
+            }
+            #workOrderSection .mb-4.p-4 .font-semibold {
+                word-break: break-word;
+                flex: 1;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            #workOrderSection {
+                width: 100%;
+                max-width: 100%;
+                padding: 0.75rem !important;
+            }
+        }
+        
+        #workOrderSection table {
+            border-collapse: collapse;
+        }
+        #workOrderSection table td,
+        #workOrderSection table th {
+            vertical-align: middle !important;
+        }
+        #workOrderSection table td > div {
+            line-height: 1.3;
+            margin: 0;
+            padding: 0;
+        }
+        #workOrderSection table .text-xs {
+            line-height: 1.2 !important;
+            margin-top: 0.125rem !important;
+        }
+        #workOrderSection .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+        }
+        #workOrderSection .solution-grid > div {
+            min-width: 0;
+        }
+        
+        @media (max-width: 768px) {
+            #workOrderSection h2.text-base {
+                font-size: 0.8rem !important;
+                line-height: 1.2 !important;
+            }
+            #workOrderSection .wo-title {
+                font-size: 0.8rem !important;
+            }
+            #workOrderSection .mb-4,
+            #workOrderSection .mb-3 {
+                margin-bottom: 0.5rem !important;
+            }
+            #workOrderSection .p-4 {
+                padding: 0.5rem !important;
+            }
+            #workOrderSection .text-sm {
+                font-size: 0.7rem !important;
+            }
+            #workOrderSection .mb-4 .w-20 {
+                width: auto !important;
+                font-size: 0.6rem !important;
+            }
+            #workOrderSection .mb-4 .font-semibold {
+                font-size: 0.65rem !important;
+            }
+            #workOrderSection .gap-x-6 {
+                gap: 0.25rem 0.5rem !important;
+            }
+            #workOrderSection .solution-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.375rem;
+            }
+            #workOrderSection .solution-grid > div {
+                padding: 0.375rem !important;
+            }
+            #workOrderSection .solution-grid .text-sm {
+                font-size: 0.7rem !important;
+            }
+            #workOrderSection h3 {
+                font-size: 0.7rem !important;
+                line-height: 1.3 !important;
+            }
+            #workOrderSection h3 span {
+                font-size: 0.65rem !important;
+            }
+            #workOrderSection table {
+                font-size: 0.65rem !important;
+            }
+            #workOrderSection table th {
+                padding: 0.3rem 0.2rem !important;
+                vertical-align: middle !important;
+                line-height: 1.2 !important;
+                font-size: 0.65rem !important;
+            }
+            #workOrderSection table td {
+                padding: 0.3rem 0.2rem !important;
+                vertical-align: middle !important;
+                line-height: 1.2 !important;
+                font-size: 0.65rem !important;
+            }
+            #workOrderSection table td > div {
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1.2 !important;
+                font-size: 0.65rem !important;
+            }
+            #workOrderSection table .text-xs {
+                font-size: 0.6rem !important;
+            }
+            #workOrderSection table td,
+            #workOrderSection table th,
+            #workOrderSection table td div,
+            #workOrderSection table td span {
+                font-size: 0.65rem !important;
+            }
+            #woAlkaliTable .font-medium {
+                font-weight: normal !important;
+            }
+            #woAlkaliTable .text-sm {
+                font-weight: normal !important;
+            }
+            #woAlkaliTable td > div {
+                white-space: normal !important;
+                word-break: break-word !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-4 sm:pb-8">
+
+    <header class="top print:hidden">
+        <div class="head-row">
+            <span class="head-accent-bar"></span>
+            <div class="head-titles">
+                <h1 id="appTitle" data-i18n="title">CPB試染工具</h1>
+            </div>
+            <div class="head-actions">
+                <div class="lang-seg-wrap">
+                    <button type="button" onclick="setLanguage('zh')" id="langBtnZh" class="lang-seg-btn active">中</button>
+                    <button type="button" onclick="setLanguage('en')" id="langBtnEn" class="lang-seg-btn">EN</button>
+                </div>
+                <button id="shareButton" onclick="shareToolUrl()" title="分享" data-i18n-title="shareButton" class="share-btn">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div class="top-bar-slim no-print">
+        <div class="shell">
+            <div class="top-bar-slim-grid">
+                <div>
+                    <label class="top-bar-label" data-i18n="loadRecipeLabel">載入配方</label>
+                    <div class="top-bar-slim-row">
+                        <select id="savedRecipesSel" onchange="loadRecipe()">
+                            <option value="" data-i18n="selectRecipe">-- 選擇已儲存的配方 --</option>
+                        </select>
+                        <button type="button" class="btn-sm danger" onclick="deleteRecipe()" title="刪除" data-i18n-title="delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="top-bar-label" data-i18n="saveRecipeLabel">儲存配方</label>
+                    <div class="top-bar-slim-row">
+                        <input type="text" id="recipeNameInput" data-i18n-placeholder="saveRecipePlaceholder" placeholder="輸入配方名稱 (例如: 紅色-棉布-客戶A)">
+                        <button type="button" class="btn-sm" onclick="saveRecipe()" title="儲存" data-i18n-title="saveButton">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav id="pageTabs" class="page-tabs print:hidden">
+        <div class="page-tabs-inner">
+                <button type="button" class="page-tab-btn active" data-tab="form" onclick="switchPageTab('form')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
+                    <span data-i18n="tabFormSettings">配方設定</span>
+                </button>
+                <button type="button" class="page-tab-btn" data-tab="pretreatment" onclick="switchPageTab('pretreatment')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"/></svg>
+                    <span data-i18n="tabPretreatment">前處理</span>
+                </button>
+                <button type="button" class="page-tab-btn" data-tab="washing" onclick="switchPageTab('washing')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a7.5 7.5 0 007.5-7.5c0-4.142-3.358-7.5-7.5-13.5C7.5 6 4.5 9.358 4.5 13.5A7.5 7.5 0 0012 21z"/></svg>
+                    <span data-i18n="tabWashing">水洗</span>
+                </button>
+                <button type="button" class="page-tab-btn" data-tab="card" onclick="switchPageTab('card')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <span data-i18n="tabWorkCard">工卡</span>
+                </button>
+                <button type="button" class="page-tab-btn" data-tab="result" onclick="switchPageTab('result')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <span data-i18n="tabDyeResult">染色結果</span>
+                </button>
+        </div>
+    </nav>
+
+    <nav id="quickNav" class="quick-nav print:hidden" aria-label="Quick navigation">
+        <div class="quick-nav-inner">
+                <button type="button" class="quick-nav-btn" data-target="sectionOrder" onclick="scrollToQuickNavSection('sectionOrder')" data-i18n="navOrder">訂單布料</button>
+                <button type="button" class="quick-nav-btn" data-target="sectionAlkaliMethod" onclick="scrollToQuickNavSection('sectionAlkaliMethod')" data-i18n="navAlkaliMethod">鹼劑設定</button>
+                <button type="button" class="quick-nav-btn" data-target="sectionDyeRecipe" onclick="scrollToQuickNavSection('sectionDyeRecipe')" data-i18n="navDyeRecipe">染料/鹼劑配方</button>
+        </div>
+    </nav>
+
+    <main class="shell">
+        <div class="sm:pb-8">
+            <div id="formTabPanel">
+            <div class="flex justify-end mt-2 sm:mt-3 mb-1">
+                <button type="button" onclick="clearCurrentDraft()" class="text-xs text-gray-400 hover:text-red-500 hover:underline" data-i18n="clearDraft">清除目前內容</button>
+            </div>
+
+            <!-- Customer Information -->
+            <div id="sectionOrder" class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-purple-500 rounded-full"></span>
+                    <span data-i18n="orderInfo">訂單資訊</span>
+                </h2>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                    <div>
+                        <label class="input-label" data-i18n="customer">客戶</label>
+                        <input type="text" id="customerName" data-i18n-placeholder="customerPlaceholder" placeholder="客戶名稱" oninput="updateWorkOrder()" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="colorOrder">顏色/訂單號</label>
+                        <input type="text" id="colorOrder" data-i18n-placeholder="colorOrderPlaceholder" placeholder="顏色名稱或訂單號" oninput="updateWorkOrder()" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="fabricType">布料類型</label>
+                        <input type="text" id="fabricType" data-i18n-placeholder="fabricTypePlaceholder" placeholder="例如: 100% 棉" oninput="updateWorkOrder()" class="input-field">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fabric Information -->
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-yellow-500 rounded-full"></span>
+                    <span data-i18n="fabricInfo">布料資訊</span>
+                </h2>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                    <div>
+                        <label class="input-label" data-i18n="fabricWeight">布重 (g/m)</label>
+                        <input type="number" id="fabricWeight" value="" placeholder="0" min="0" oninput="handleFabricFieldInput('fabricWeight')" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="fabricLength">布長 (m)</label>
+                        <input type="number" id="fabricLength" value="" placeholder="0" min="0" oninput="handleFabricFieldInput('fabricLength')" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="totalFabric">總布量 (kg)</label>
+                        <input type="number" id="fabricQuantity" value="100" placeholder="0" min="0" oninput="handleFabricFieldInput('fabricQuantity')" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="pickup">軋吸率 (%)</label>
+                        <input type="number" id="pickUp" value="100" placeholder="0" min="0" max="150" oninput="calculate()" class="input-field">
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 mt-2" data-i18n="fabricAutoCalcHint">總布量、布重、布長三項填其中任兩項,第三項會自動算出來;三項都填的話,以最近修改的兩項為準</p>
+            </div>
+
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-rose-500 rounded-full"></span>
+                    <span data-i18n="processTime">製程時間</span>
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div>
+                        <label class="input-label" data-i18n="runningSpeed">車速 (m/min)</label>
+                        <input type="number" id="runningSpeed" value="30" placeholder="0" min="0" oninput="calculate()" class="input-field">
+                    </div>
+                    <div>
+                        <label class="input-label" data-i18n="batchTime">堆置時間 (小時)</label>
+                        <input type="number" id="batchTime" value="20" min="1" step="1" oninput="updateWorkOrder()" class="input-field">
+                    </div>
+                </div>
+
+                <div id="estimatedTimeBox" class="hidden mt-4 info-box bg-rose-50 border-rose-200">
+                    <span class="font-semibold text-rose-800" data-i18n="estimatedRunTime">預估軋染時間: </span>
+                    <span id="estimatedRunTime" class="text-rose-700 font-bold">-</span>
+                </div>
+            </div>
+
+            <div id="sectionAlkaliMethod" class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                    <span data-i18n="alkaliMethodSection">鹼劑方法設定</span>
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
+                    <div>
+                        <label class="input-label" data-i18n="alkaliMethod">鹼劑方法</label>
+                        <select id="alkaliMethod" onchange="updateAlkaliMethod()" class="input-field cursor-pointer">
+                            <option value="silicate-free" data-i18n="methodA">A. 非水玻璃法</option>
+                            <option value="sodium-silicate" data-i18n="methodB">B. 水玻璃法</option>
+                            <option value="modified-silicate" data-i18n="methodC">C. 改性水玻璃法</option>
+                            <option value="tropical-region" data-i18n="methodD">D. 非水玻璃法(熱帶地區)</option>
+                        </select>
+                    </div>
+                    <div id="naohTypeASlot">
+                        <label class="input-label" data-i18n="naohType">液鹼類型</label>
+                        <select id="alkaliTypeA" onchange="handleAlkaliTypeChange('A')" class="input-field">
+                            <option value="38">38°Bé (32.5% w/w)</option>
+                            <option value="50">50°Bé (50.1% w/w)</option>
+                            <option value="flakes" data-i18n="naohFlakes">片鹼 (100% w/w)</option>
+                            <option value="custom" data-i18n="custom">自定義</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Method A: Silicate Free -->
+                <div id="methodASelect">
+                    <div id="customInputA" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeA" min="1" max="50" placeholder="38" oninput="updateCustomNaOH('A')" class="input-field">
+                        </div>
+                        <div id="customInfoA" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoA" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlA" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentA" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningA" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method B: Sodium Silicate -->
+                <div id="methodBSelect" class="hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="input-label" data-i18n="silicateConc">水玻璃濃度</label>
+                            <select id="silicateConc" onchange="calculate()" class="input-field">
+                                <option value="37-40">37-40°Bé</option>
+                                <option value="40-42">40-42°Bé</option>
+                                <option value="48-50" selected>48-50°Bé</option>
+                                <option value="58-60">58-60°Bé</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="input-label" data-i18n="naohConc">液鹼濃度</label>
+                            <select id="naohConcB" onchange="handleAlkaliTypeChange('B')" class="input-field">
+                                <option value="38" selected>38°Bé (32.5% w/w)</option>
+                                <option value="50">50°Bé (50.1% w/w)</option>
+                                <option value="flakes" data-i18n="naohFlakes">片鹼 (100% w/w)</option>
+                                <option value="custom" data-i18n="custom">自定義</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="customInputB" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeB" min="1" max="50" placeholder="38" oninput="updateCustomNaOH('B')" class="input-field">
+                        </div>
+                        <div id="customInfoB" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoB" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlB" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentB" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningB" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method C: Modified Sodium Silicate -->
+                <div id="methodCSelect" class="hidden">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="input-label" data-i18n="silicateConc">水玻璃濃度</label>
+                            <select id="silicateConcC" onchange="calculate()" class="input-field">
+                                <option value="37-40">37-40°Bé</option>
+                                <option value="40-42">40-42°Bé</option>
+                                <option value="48-50" selected>48-50°Bé</option>
+                                <option value="58-60">58-60°Bé</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="input-label" data-i18n="naohConc">液鹼濃度</label>
+                            <select id="naohConcC" onchange="handleAlkaliTypeChange('C')" class="input-field">
+                                <option value="38" selected>38°Bé (32.5% w/w)</option>
+                                <option value="50">50°Bé (50.1% w/w)</option>
+                                <option value="flakes" data-i18n="naohFlakes">片鹼 (100% w/w)</option>
+                                <option value="custom" data-i18n="custom">自定義</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="customInputC" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeC" min="1" max="50" placeholder="38" oninput="updateCustomNaOH('C')" class="input-field">
+                        </div>
+                        <div id="customInfoC" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoC" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlC" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentC" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningC" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Method D: Tropical Region -->
+                <div id="methodDSelect" class="hidden">
+                    <div class="mb-4">
+                        <label class="input-label" data-i18n="naohConc">液鹼濃度</label>
+                        <select id="naohConcD" onchange="handleAlkaliTypeChange('D')" class="input-field">
+                            <option value="50" selected>50°Bé (50.1% w/w)</option>
+                            <option value="38">38°Bé (32.5% w/w)</option>
+                            <option value="flakes" data-i18n="naohFlakes">片鹼 (100% w/w)</option>
+                            <option value="custom" data-i18n="custom">自定義</option>
+                        </select>
+                    </div>
+                    
+                    <div id="customInputD" class="hidden mb-4">
+                        <div class="mb-2">
+                            <label class="input-label" data-i18n="baume">波美度 (°Bé)</label>
+                            <input type="number" id="customBaumeD" min="1" max="50" placeholder="50" oninput="updateCustomNaOH('D')" class="input-field">
+                        </div>
+                        <div id="customInfoD" class="info-box bg-gray-50 border-gray-300">
+                            <div class="grid grid-cols-3 gap-2">
+                                <div><span class="text-gray-600">ρ:</span> <span id="customRhoD" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">g/l:</span> <span id="customGlD" class="font-bold">-</span></div>
+                                <div><span class="text-gray-600">%:</span> <span id="customPercentD" class="font-bold">-</span></div>
+                            </div>
+                            <p id="customWarningD" class="hidden text-xs text-red-600 font-medium mt-2"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- NaOH Reference Table -->
+            <div class="section-card mt-5 sm:mt-6">
+                <button onclick="toggleAlkaliBasisTable()" class="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
+                    <h2 class="section-header mb-0">
+                        <span class="w-1 h-5 bg-teal-500 rounded-full"></span>
+                        <span data-i18n="alkaliBasis">鹼劑推薦依據</span>
+                    </h2>
+                    <svg id="alkaliBasisIcon" class="w-6 h-6 transform transition-transform text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="alkaliBasisTable" class="hidden mt-3 overflow-x-auto">
+                </div>
+
+                <hr class="my-4 border-gray-200">
+
+                <button onclick="toggleTable()" class="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity">
+                    <h2 class="section-header mb-0">
+                        <span class="w-1 h-5 bg-gray-500 rounded-full"></span>
+                        <span data-i18n="naohTable">液鹼濃度表</span>
+                    </h2>
+                    <svg id="tableIcon" class="w-6 h-6 transform transition-transform text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <div id="naohTable" class="hidden mt-3 overflow-x-auto">
+                    <table class="w-full border-collapse text-xs sm:text-sm">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="border px-2 py-1" data-i18n="baume">波美度 (°Bé)</th>
+                                <th class="border px-2 py-1" data-i18n="specWeight">比重 (ρ)</th>
+                                <th class="border px-2 py-1" data-i18n="naohContent">液鹼含量 (g/l)</th>
+                                <th class="border px-2 py-1" data-i18n="naohPercent">液鹼 % (w/w)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td class="border px-2 py-1 text-center">1</td><td class="border px-2 py-1 text-center">1.007</td><td class="border px-2 py-1 text-center">6.0</td><td class="border px-2 py-1 text-center">0.59</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">2</td><td class="border px-2 py-1 text-center">1.014</td><td class="border px-2 py-1 text-center">12.0</td><td class="border px-2 py-1 text-center">1.18</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">3</td><td class="border px-2 py-1 text-center">1.022</td><td class="border px-2 py-1 text-center">18.9</td><td class="border px-2 py-1 text-center">1.85</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">4</td><td class="border px-2 py-1 text-center">1.029</td><td class="border px-2 py-1 text-center">25.7</td><td class="border px-2 py-1 text-center">2.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">5</td><td class="border px-2 py-1 text-center">1.036</td><td class="border px-2 py-1 text-center">32.6</td><td class="border px-2 py-1 text-center">3.15</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">6</td><td class="border px-2 py-1 text-center">1.045</td><td class="border px-2 py-1 text-center">39.6</td><td class="border px-2 py-1 text-center">3.79</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">7</td><td class="border px-2 py-1 text-center">1.052</td><td class="border px-2 py-1 text-center">47.3</td><td class="border px-2 py-1 text-center">4.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">8</td><td class="border px-2 py-1 text-center">1.060</td><td class="border px-2 py-1 text-center">55.0</td><td class="border px-2 py-1 text-center">5.20</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">9</td><td class="border px-2 py-1 text-center">1.067</td><td class="border px-2 py-1 text-center">62.5</td><td class="border px-2 py-1 text-center">5.86</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">10</td><td class="border px-2 py-1 text-center">1.075</td><td class="border px-2 py-1 text-center">70.7</td><td class="border px-2 py-1 text-center">6.58</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">11</td><td class="border px-2 py-1 text-center">1.083</td><td class="border px-2 py-1 text-center">79.1</td><td class="border px-2 py-1 text-center">7.30</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">12</td><td class="border px-2 py-1 text-center">1.091</td><td class="border px-2 py-1 text-center">88.0</td><td class="border px-2 py-1 text-center">8.07</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">13</td><td class="border px-2 py-1 text-center">1.100</td><td class="border px-2 py-1 text-center">96.6</td><td class="border px-2 py-1 text-center">8.78</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">14</td><td class="border px-2 py-1 text-center">1.108</td><td class="border px-2 py-1 text-center">105.3</td><td class="border px-2 py-1 text-center">9.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">15</td><td class="border px-2 py-1 text-center">1.116</td><td class="border px-2 py-1 text-center">114.9</td><td class="border px-2 py-1 text-center">10.30</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">16</td><td class="border px-2 py-1 text-center">1.125</td><td class="border px-2 py-1 text-center">124.4</td><td class="border px-2 py-1 text-center">11.06</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">17</td><td class="border px-2 py-1 text-center">1.134</td><td class="border px-2 py-1 text-center">134.0</td><td class="border px-2 py-1 text-center">11.84</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">18</td><td class="border px-2 py-1 text-center">1.142</td><td class="border px-2 py-1 text-center">145.0</td><td class="border px-2 py-1 text-center">12.60</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">19</td><td class="border px-2 py-1 text-center">1.152</td><td class="border px-2 py-1 text-center">155.5</td><td class="border px-2 py-1 text-center">13.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">20</td><td class="border px-2 py-1 text-center">1.161</td><td class="border px-2 py-1 text-center">166.7</td><td class="border px-2 py-1 text-center">14.35</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">21</td><td class="border px-2 py-1 text-center">1.171</td><td class="border px-2 py-1 text-center">177.4</td><td class="border px-2 py-1 text-center">15.15</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">22</td><td class="border px-2 py-1 text-center">1.180</td><td class="border px-2 py-1 text-center">188.8</td><td class="border px-2 py-1 text-center">16.00</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">23</td><td class="border px-2 py-1 text-center">1.190</td><td class="border px-2 py-1 text-center">201.2</td><td class="border px-2 py-1 text-center">16.91</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">24</td><td class="border px-2 py-1 text-center">1.200</td><td class="border px-2 py-1 text-center">213.7</td><td class="border px-2 py-1 text-center">17.81</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">25</td><td class="border px-2 py-1 text-center">1.210</td><td class="border px-2 py-1 text-center">226.4</td><td class="border px-2 py-1 text-center">18.71</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">26</td><td class="border px-2 py-1 text-center">1.220</td><td class="border px-2 py-1 text-center">239.7</td><td class="border px-2 py-1 text-center">19.65</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">27</td><td class="border px-2 py-1 text-center">1.231</td><td class="border px-2 py-1 text-center">253.6</td><td class="border px-2 py-1 text-center">20.60</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">28</td><td class="border px-2 py-1 text-center">1.241</td><td class="border px-2 py-1 text-center">267.4</td><td class="border px-2 py-1 text-center">21.55</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">29</td><td class="border px-2 py-1 text-center">1.252</td><td class="border px-2 py-1 text-center">281.7</td><td class="border px-2 py-1 text-center">22.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">30</td><td class="border px-2 py-1 text-center">1.263</td><td class="border px-2 py-1 text-center">296.8</td><td class="border px-2 py-1 text-center">23.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">31</td><td class="border px-2 py-1 text-center">1.274</td><td class="border px-2 py-1 text-center">311.9</td><td class="border px-2 py-1 text-center">24.48</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">32</td><td class="border px-2 py-1 text-center">1.285</td><td class="border px-2 py-1 text-center">327.7</td><td class="border px-2 py-1 text-center">25.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">33</td><td class="border px-2 py-1 text-center">1.297</td><td class="border px-2 py-1 text-center">344.7</td><td class="border px-2 py-1 text-center">26.58</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">34</td><td class="border px-2 py-1 text-center">1.308</td><td class="border px-2 py-1 text-center">361.7</td><td class="border px-2 py-1 text-center">27.65</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">35</td><td class="border px-2 py-1 text-center">1.320</td><td class="border px-2 py-1 text-center">380.6</td><td class="border px-2 py-1 text-center">28.83</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">36</td><td class="border px-2 py-1 text-center">1.332</td><td class="border px-2 py-1 text-center">399.6</td><td class="border px-2 py-1 text-center">30.00</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">37</td><td class="border px-2 py-1 text-center">1.345</td><td class="border px-2 py-1 text-center">419.6</td><td class="border px-2 py-1 text-center">31.20</td></tr>
+                            <tr class="bg-yellow-50"><td class="border px-2 py-1 text-center font-bold">38</td><td class="border px-2 py-1 text-center font-bold">1.357</td><td class="border px-2 py-1 text-center font-bold">441.0</td><td class="border px-2 py-1 text-center font-bold">32.50</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">39</td><td class="border px-2 py-1 text-center">1.370</td><td class="border px-2 py-1 text-center">462.1</td><td class="border px-2 py-1 text-center">33.73</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">40</td><td class="border px-2 py-1 text-center">1.383</td><td class="border px-2 py-1 text-center">484.1</td><td class="border px-2 py-1 text-center">35.00</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">41</td><td class="border px-2 py-1 text-center">1.397</td><td class="border px-2 py-1 text-center">507.9</td><td class="border px-2 py-1 text-center">36.36</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">42</td><td class="border px-2 py-1 text-center">1.410</td><td class="border px-2 py-1 text-center">530.9</td><td class="border px-2 py-1 text-center">37.65</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">43</td><td class="border px-2 py-1 text-center">1.424</td><td class="border px-2 py-1 text-center">556.2</td><td class="border px-2 py-1 text-center">39.06</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">44</td><td class="border px-2 py-1 text-center">1.438</td><td class="border px-2 py-1 text-center">582.0</td><td class="border px-2 py-1 text-center">40.47</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">45</td><td class="border px-2 py-1 text-center">1.453</td><td class="border px-2 py-1 text-center">610.6</td><td class="border px-2 py-1 text-center">42.02</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">46</td><td class="border px-2 py-1 text-center">1.468</td><td class="border px-2 py-1 text-center">639.8</td><td class="border px-2 py-1 text-center">43.58</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">47</td><td class="border px-2 py-1 text-center">1.483</td><td class="border px-2 py-1 text-center">669.7</td><td class="border px-2 py-1 text-center">45.16</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">48</td><td class="border px-2 py-1 text-center">1.498</td><td class="border px-2 py-1 text-center">700.0</td><td class="border px-2 py-1 text-center">46.73</td></tr>
+                            <tr><td class="border px-2 py-1 text-center">49</td><td class="border px-2 py-1 text-center">1.514</td><td class="border px-2 py-1 text-center">732.9</td><td class="border px-2 py-1 text-center">48.41</td></tr>
+                            <tr class="bg-yellow-50"><td class="border px-2 py-1 text-center font-bold">50</td><td class="border px-2 py-1 text-center font-bold">1.530</td><td class="border px-2 py-1 text-center font-bold">766.5</td><td class="border px-2 py-1 text-center font-bold">50.10</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="fabricInputPrompt" class="section-card mb-5 sm:mb-6 bg-amber-50 border-2 border-amber-300 text-center py-8">
+                <svg class="w-10 h-10 text-amber-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="text-amber-800 font-semibold" data-i18n="fabricInputPrompt">請先在上方填寫「總布量」與「軋吸率」,才會顯示後續的配方與計算內容</p>
+            </div>
+
+            <div id="planSection" class="hidden">
+
+            <div class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-cyan-500 rounded-full"></span>
+                    <span data-i18n="solutionPrep">溶液配製</span>
+                </h2>
+                
+                <div class="mb-4 info-box bg-green-50 border-green-200 text-sm">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="font-semibold text-green-800">
+                            <span data-i18n="theoreticalSolution">最低需求溶液量: </span><span id="theoreticalSolution" class="text-base font-bold text-green-700">1000.00 ltr</span>
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span class="text-gray-600">
+                            <span class="font-semibold" data-i18n="dosingRatio">配比 4:1 → </span>
+                            <span data-i18n="dye">染料: </span><span id="theoreticalDyeSol" class="font-bold text-green-700">800.00 ltr</span>
+                            <span class="mx-1">|</span>
+                            <span data-i18n="alkali">鹼劑: </span><span id="theoreticalAlkaliSol" class="font-bold text-green-700">200.00 ltr</span>
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="input-label" data-i18n="dyeSolutionPrepare">配製染料溶液 (ltr)</label>
+                        <input type="number" id="dyeSolution" value="850" min="0" oninput="this.dataset.userModified='true'; calculate();" class="input-field">
+                        <div id="dyeDifference" class="mt-2 info-box bg-blue-50 border-blue-200">
+                            <span class="font-semibold text-blue-800" data-i18n="vsTheoretical">較最低需求: </span>
+                            <span class="text-sm font-bold text-blue-700">+50.00 ltr</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="input-label" data-i18n="alkaliSolutionPrepare">配製鹼液 (ltr)</label>
+                        <input type="number" id="alkaliSolution" value="250" min="0" oninput="this.dataset.userModified='true'; calculate();" class="input-field">
+                        <div id="alkaliDifference" class="mt-2 info-box bg-green-50 border-green-200">
+                            <span class="font-semibold text-green-800" data-i18n="vsTheoretical">較最低需求: </span>
+                            <span class="text-sm font-bold text-green-700">+50.00 ltr</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="sectionDyeRecipe" class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-blue-500 rounded-full"></span>
+                    <span data-i18n="dyeRecipe">染料配方</span>
+                </h2>
+                <div class="mb-3 info-box bg-blue-50 border-blue-200 font-semibold">
+                    <span data-i18n="prepareInDye">配製染料溶液: </span>
+                    <span id="dyeSolutionLabel" class="text-blue-700">840.00</span> ltr
+                </div>
+                <div class="overflow-x-auto -mx-3 sm:mx-0">
+                    <table class="w-full border-collapse min-w-full" id="dyeAuxTable" style="table-layout: fixed;">
+                        <thead>
+                            <tr class="table-header">
+                                <th class="border border-gray-200 px-2 sm:px-4 py-2.5 text-left" style="width: 40%;" data-i18n="item">項目</th>
+                                <th class="border border-gray-200 px-1 sm:px-4 py-2.5 text-left bg-amber-50" style="width: 30%;" data-i18n="recipeGl">配方 (g/l)</th>
+                                <th class="border border-gray-200 px-1 sm:px-4 py-2.5 text-left bg-emerald-50" style="width: 30%;" data-i18n="bulkG">用量 (g)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dyeTableBody">
+                            <tr class="hover:bg-gray-50" data-row-type="dye">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" placeholder="黃色" data-i18n-placeholder="dyeDefault1" list="dyeNameSuggestions" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50" data-row-type="dye">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" placeholder="紅色" data-i18n-placeholder="dyeDefault2" list="dyeNameSuggestions" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50" data-row-type="dye">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" placeholder="藍色" data-i18n-placeholder="dyeDefault3" list="dyeNameSuggestions" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" min="0" max="150" oninput="calculate()" class="dye-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right dye-quantity">0.00</td>
+                            </tr>
+                            <tr id="addDyeRowTr">
+                                <td colspan="3" class="border border-gray-200 px-3 sm:px-4 py-2 text-center bg-gray-50">
+                                    <button type="button" onclick="addDyeRow()" class="add-row-btn" data-i18n="addDyeRow">＋ 新增染料</button>
+                                    <button type="button" onclick="deleteLastRow('dye')" class="del-row-btn" data-i18n="deleteLastDyeRow">－ 刪除</button>
+                                </td>
+                            </tr>
+                            <tr class="table-header font-bold bg-gray-100">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2.5 text-right" style="font-size: 0.875rem;" data-i18n="total">總計:</td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2.5 bg-amber-100" style="white-space: nowrap;"><span id="totalDyeConc" class="number-display">0.00</span> <span style="font-size: 0.875rem;">g/l</span></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2.5 bg-emerald-100"></td>
+                            </tr>
+                            <tr class="table-header bg-blue-50">
+                                <td colspan="3" class="border border-gray-200 px-3 sm:px-4 py-2.5 font-semibold text-gray-700" data-i18n="auxiliaries">助劑</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50" data-row-type="aux">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" placeholder="滲透劑" data-i18n-placeholder="auxDefault1" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" step="0.1" min="0" oninput="calculate()" class="aux-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right aux-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50" data-row-type="aux">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" data-i18n-placeholder="auxPlaceholder" placeholder="助劑" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" step="0.1" min="0" oninput="calculate()" class="aux-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right aux-quantity">0.00</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50" data-row-type="aux">
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2"><input type="text" data-i18n-placeholder="auxPlaceholder" placeholder="助劑" class="w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-amber-50"><input type="number" placeholder="0" step="0.1" min="0" oninput="calculate()" class="aux-recipe w-full px-2 py-1.5 text-sm font-medium border border-gray-300 rounded focus:border-blue-500 focus:outline-none"></td>
+                                <td class="border border-gray-200 px-3 sm:px-4 py-2 bg-emerald-50 font-semibold number-display text-right aux-quantity">0.00</td>
+                            </tr>
+                            <tr id="addAuxRowTr">
+                                <td colspan="3" class="border border-gray-200 px-3 sm:px-4 py-2 text-center bg-gray-50">
+                                    <button type="button" onclick="addAuxRow()" class="add-row-btn" data-i18n="addAuxRow">＋ 新增助劑</button>
+                                    <button type="button" onclick="deleteLastRow('aux')" class="del-row-btn" data-i18n="deleteLastAuxRow">－ 刪除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <datalist id="dyeNameSuggestions">
+                    <option value="Yellow C-GL">
+                    <option value="Yellow C-GR">
+                    <option value="Yellow C-RN">
+                    <option value="Yellow CE-N">
+                    <option value="Orange C-2R">
+                    <option value="Red C-3B">
+                    <option value="Red C-RB 133%">
+                    <option value="Red C-D">
+                    <option value="Blue C-R S/P">
+                    <option value="Blue C-BB 133%">
+                    <option value="Blue C-BRF">
+                    <option value="Blue C-LX">
+                    <option value="Dark Blue LF">
+                    <option value="Turq. Blue C-G 133%">
+                    <option value="Navy C-GG 133%">
+                    <option value="Navy C-GB H/C">
+                    <option value="Navy C-FB">
+                    <option value="Black C-B 133%">
+                    <option value="Black C-RL">
+                    <option value="Black MWF">
+                    <option value="Yellow CS">
+                    <option value="Orange CS">
+                    <option value="Red Brown CS">
+                    <option value="Olive CS">
+                    <option value="Grey CS">
+                    <option value="Flavine FC">
+                    <option value="Orange FC">
+                    <option value="Scarlet FC">
+                    <option value="Blue FC">
+                    <option value="Yellow LX">
+                    <option value="Red LX">
+                    <option value="Red LF-B">
+                    <option value="Red LF-2B">
+                    <option value="Red LF-4B">
+                    <option value="Grey LF">
+                    <option value="Yellow ED-R">
+                    <option value="Yellow ED">
+                    <option value="Orange ED-N">
+                    <option value="Orange ED-4R">
+                    <option value="Red ED">
+                    <option value="Red ED-2B">
+                    <option value="Red ED-3B">
+                    <option value="Red ED-7BN">
+                    <option value="Red ED-S">
+                    <option value="Rubine ED">
+                    <option value="Blue ED-G">
+                    <option value="Blue ED">
+                    <option value="Blue L-ED">
+                    <option value="Navy ED">
+                    <option value="Black ED">
+                    <option value="Black ED-G">
+                    <option value="Black ED-R">
+                    <option value="Black EDN">
+                    <option value="Black ED-3R">
+                    <option value="Amber ERC">
+                    <option value="Yellow ERC">
+                    <option value="Light Red ERC">
+                    <option value="Cardinal ERC">
+                    <option value="Bordeaux ERC">
+                    <option value="Blue ERC">
+                    <option value="Dark Blue ERC">
+                    <option value="Marine ERC">
+                    <option value="Black ERC">
+                    <option value="Jet Black ERC">
+                </datalist>
+            </div>
+
+            <div id="sectionAlkaliSystem" class="section-card mb-5 sm:mb-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-indigo-500 rounded-full"></span>
+                    <span data-i18n="alkaliSystem">鹼劑配方</span>
+                </h2>
+                
+                <div class="mb-4 info-box bg-gray-50 border-gray-300 text-sm">
+                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <span class="font-semibold text-green-700">
+                            <span data-i18n="prepareInAlkali">配製鹼液: </span><span id="alkaliSolutionLabel">210.00</span> ltr
+                        </span>
+                        <span class="text-gray-300">|</span>
+                        <span id="currentMethodBanner" class="font-semibold text-indigo-800"></span>
+                        <span class="text-gray-300">|</span>
+                        <span class="font-semibold text-blue-700">
+                            <span data-i18n="basedOnDye">基於染料: </span><span id="dyeConcCurrent">0.00</span> g/l
+                        </span>
+                    </div>
+                </div>
+
+                <div id="dyeInputPrompt" class="hidden text-center py-6 text-gray-500 text-sm">
+                    <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p data-i18n="dyeInputPrompt">請先在上方「染料配方」填寫染料用量,才會顯示鹼劑建議配方</p>
+                </div>
+
+                <div id="alkaliTableWrapper">
+<div class="overflow-x-auto -mx-3 sm:mx-0">
+    <table class="w-full border-collapse" style="min-width: 480px;">
+        <thead>
+            <tr class="table-header">
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left" style="width: 30%;" data-i18n="alkali">鹼劑</th>
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-blue-50" style="width: 25%;" data-i18n="suggested">建議配方</th>
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-amber-50" style="width: 25%;" data-i18n="actual">實際配方</th>
+                <th class="border border-gray-200 px-3 sm:px-4 py-2.5 text-left bg-emerald-50" style="width: 20%;" data-i18n="bulkG">用量 (g)</th>
+            </tr>
+        </thead>
+        <tbody id="alkaliTableBody">
+        </tbody>
+    </table>
+</div>
+                </div>
+
+            </div>
+
+            <div class="section-card mb-5 sm:mb-6 bg-amber-50 border-2 border-amber-300">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-amber-500 rounded-full"></span>
+                    <span data-i18n="dyeingCompletionSection">染色完成記錄</span>
+                </h2>
+
+                <label class="input-label" data-i18n="paddingEndTime">軋吸結束時間</label>
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="datetime-local" id="paddingEndTime" oninput="updateWorkOrder()" class="flex-1 input-field bg-white">
+                    <button onclick="setPaddingEndTimeNow()" class="px-4 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors whitespace-nowrap">
+                        <span data-i18n="nowButton">現在</span>
+                    </button>
+                </div>
+
+                <div id="washTimeResultBox" class="hidden mt-4 info-box bg-white border-amber-300">
+                    <span class="font-semibold text-amber-800" data-i18n="suggestedWashTime">建議水洗時間: </span>
+                    <span id="suggestedWashTimeDisplay" class="text-amber-700 font-bold">-</span>
+                </div>
+                <p id="washTimePrompt" class="mt-3 text-xs text-gray-500" data-i18n="paddingEndTimePrompt">請填寫「軋吸結束時間」,即可算出建議水洗時間</p>
+            </div>
+            </div>
+            </div>
+
+            <div id="pretreatmentTabPanel" class="hidden">
+            <div id="sectionPretreatment" class="section-card mb-5 sm:mb-6 mt-5 sm:mt-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-orange-500 rounded-full"></span>
+                    <span data-i18n="pretreatmentSection">前處理設定</span>
+                </h2>
+                <label class="input-label" data-i18n="pretreatmentMethod">前處理方式</label>
+                <select id="pretreatmentMethod" onchange="updatePretreatmentUI()" class="input-field mb-1">
+                    <option value="" data-i18n="pretreatmentNone">未使用前處理</option>
+                    <option value="continuous" data-i18n="pretreatmentContinuous">連續式 (Continuous)</option>
+                    <option value="cold-bleach" data-i18n="pretreatmentColdBleach">冷漂 (Cold Bleach)</option>
+                    <option value="jet" data-i18n="pretreatmentJet">溢流染機 (Jet)</option>
+                </select>
+
+                <div id="pretreatmentContinuousBlocks" class="hidden mt-4 space-y-5">
+                    <div>
+                        <h3 class="text-sm font-bold mb-2" style="color:var(--ink);" data-i18n="pretreatmentDemin">第一段:脫礦 (Demineralization)</h3>
+                        <div id="pretreatmentDeminTableWrap"></div>
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="input-label" data-i18n="temperature">溫度 (°C)</label>
+                                <input type="number" id="pretreatmentDeminTemp" min="0" class="input-field">
+                            </div>
+                            <div>
+                                <label class="input-label" data-i18n="processTime">處理時間 (分鐘)</label>
+                                <input type="number" id="pretreatmentDeminTime" min="0" class="input-field">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pt-4" style="border-top:1px solid var(--border);">
+                        <h3 class="text-sm font-bold mb-2" style="color:var(--ink);" data-i18n="pretreatmentBleach">第二段:漂白 (Bleaching)</h3>
+                        <div id="pretreatmentBleachTableWrap"></div>
+                        <div class="grid grid-cols-2 gap-3 mt-3">
+                            <div>
+                                <label class="input-label" data-i18n="temperature">溫度 (°C)</label>
+                                <input type="number" id="pretreatmentBleachTemp" min="0" class="input-field">
+                            </div>
+                            <div>
+                                <label class="input-label" data-i18n="processTime">處理時間 (分鐘)</label>
+                                <input type="number" id="pretreatmentBleachTime" min="0" class="input-field">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pretreatmentSingleBlock" class="hidden mt-4">
+                    <div id="pretreatmentSingleTableWrap"></div>
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+                        <div>
+                            <label class="input-label" data-i18n="temperature">溫度 (°C)</label>
+                            <input type="number" id="pretreatmentSingleTemp" min="0" class="input-field">
+                        </div>
+                        <div>
+                            <label class="input-label" data-i18n="processTime">處理時間 (分鐘)</label>
+                            <input type="number" id="pretreatmentSingleTime" min="0" class="input-field">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+
+            <div id="washingTabPanel" class="hidden">
+            <div id="sectionWashing" class="section-card mb-5 sm:mb-6 mt-5 sm:mt-6">
+                <h2 class="section-header">
+                    <span class="w-1 h-5 bg-cyan-500 rounded-full"></span>
+                    <span data-i18n="washingSection">水洗設定</span>
+                </h2>
+                <label class="input-label" data-i18n="washingMethod">水洗方式</label>
+                <select id="washingMethod" onchange="updateWashingUI()" class="input-field mb-1">
+                    <option value="" data-i18n="washingNone">未使用水洗設定</option>
+                    <option value="continuous" data-i18n="washingContinuous">連續式 (Continuous)</option>
+                    <option value="jet" data-i18n="washingJet">溢流染機 (Jet)</option>
+                </select>
+
+                <div id="washingContinuousBlock" class="hidden mt-4">
+                    <label class="input-label" data-i18n="runningSpeedWashing">車速 (m/min)</label>
+                    <input type="number" id="washingRunningSpeed" min="0" class="input-field mb-4">
+                    <div id="washingContinuousStagesWrap"></div>
+                </div>
+
+                <div id="washingJetBlock" class="hidden mt-4">
+                    <div id="washingJetStagesWrap"></div>
+                </div>
+            </div>
+            </div>
+
+            <div id="cardTabPanel" class="hidden">
+                <div id="cardTabPrompt" class="section-card text-center py-10 mt-5 sm:mt-6 bg-amber-50 border-2 border-amber-300 border-dashed">
+                    <svg class="w-10 h-10 text-amber-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p class="text-amber-800 font-semibold" data-i18n="cardTabPrompt">請先在「配方設定」分頁填寫「總布量」與「軋吸率」,才會顯示工卡內容</p>
+                </div>
+            <div id="workOrderSection" class="hidden section-card mt-5 sm:mt-6 p-6 bg-white rounded-xl border-2 border-green-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-green-500 rounded-full print:hidden hidden sm:inline-block"></span>
+                        <span class="wo-title" data-i18n="workOrder">CPB生產工作單</span>
+                    </h2>
+                    <div class="relative print:hidden flex-shrink-0" id="downloadMenuWrap">
+                        <button id="downloadToggleBtn" onclick="toggleDownloadMenu(event)" class="px-2 sm:px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            <span class="hidden sm:inline" data-i18n="download">下載</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div id="downloadMenu" class="hidden absolute right-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 overflow-hidden">
+                            <button onclick="closeDownloadMenu(); copyWorkOrderAsImage();" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5">
+                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14M14 8h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <span data-i18n="downloadImage">下載圖片</span>
+                            </button>
+                            <button onclick="closeDownloadMenu(); printWorkOrder();" class="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 border-t border-gray-100">
+                                <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                <span data-i18n="saveAsPdf">另存為 PDF</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+<div class="mb-4 p-4 bg-gray-50 rounded-lg border border-gray-300">
+    <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="date">日期:</span>
+            <span id="woDate" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="qty">總布量:</span>
+            <span id="woFabric" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="customer">客戶:</span>
+            <span id="woCustomer" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="pickupLabel">軋吸率:</span>
+            <span id="woPickup" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="colorOrderLabel">顏色/訂單:</span>
+            <span id="woColorOrder" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="alkali">鹼劑:</span>
+            <span id="woMethod" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="fabricLabel">布料:</span>
+            <span id="woFabricType" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="batchTimeLabel">堆置時間:</span>
+            <span id="woBatchTime" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="runningSpeedLabel">車速:</span>
+            <span id="woRunningSpeed" class="font-semibold">-</span>
+        </div>
+        <div class="flex">
+            <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="estimatedRunTimeLabel">預估軋吸:</span>
+            <span id="woEstimatedTime" class="font-semibold">-</span>
+        </div>
+        <div id="woPaddingTimeRow" class="hidden col-span-2 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-dashed border-gray-300 pt-2 mt-1">
+            <div class="flex">
+                <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="woPaddingEndTimeLabel">軋吸結束:</span>
+                <span id="woPaddingEndTime" class="font-semibold">-</span>
+            </div>
+            <div class="flex">
+                <span class="text-gray-600 w-20 flex-shrink-0" data-i18n="woSuggestedWashTimeLabel">建議水洗:</span>
+                <span id="woSuggestedWashTime" class="font-semibold text-amber-700">-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+                <div class="mb-3 sm:mb-4 solution-grid">
+                    <div class="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-200 text-center">
+                        <div class="text-[10px] sm:text-xs text-gray-600 mb-1" data-i18n="requiredSol">最低需求量</div>
+                        <div id="woTotalSol" class="text-sm sm:text-lg font-bold text-blue-600">-</div>
+                        <div id="woTheoreticalNote" class="text-[9px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">-</div>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-indigo-50 rounded-lg border border-indigo-200 text-center">
+                        <div class="text-[10px] sm:text-xs text-gray-600 mb-1" data-i18n="prepareDye">配製染料溶液</div>
+                        <div id="woDyeSol" class="text-sm sm:text-lg font-bold text-indigo-600">-</div>
+                    </div>
+                    <div class="p-2 sm:p-3 bg-green-50 rounded-lg border border-green-200 text-center">
+                        <div class="text-[10px] sm:text-xs text-gray-600 mb-1" data-i18n="prepareAlkali">配製鹼液</div>
+                        <div id="woAlkaliSol" class="text-sm sm:text-lg font-bold text-green-600">-</div>
+                    </div>
+                </div>
+
+                <div class="mb-3 sm:mb-4">
+                    <h3 class="font-bold text-sm sm:text-base mb-1.5 sm:mb-2 text-gray-700 flex items-center justify-between">
+                        <span data-i18n="dyeSolRecipe">染料溶液配方</span>
+                        <span class="text-xs sm:text-sm font-semibold text-indigo-600"><span data-i18n="prepare">配製:</span> <span id="woDyeSolAmount">840.00</span> ltr</span>
+                    </h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-blue-100">
+                                    <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 40%;" data-i18n="item">項目</th>
+                                    <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="recipeGl">配方 (g/l)</th>
+                                    <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="quantity">用量 (g)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="woDyeTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-base mb-2 text-gray-700 flex items-center justify-between">
+                        <span data-i18n="alkaliSolRecipe">鹼液配方</span>
+                        <span class="text-sm font-semibold text-green-600"><span data-i18n="prepare">配製:</span> <span id="woAlkaliSolAmount">210.00</span> ltr</span>
+                    </h3>
+                    <p id="woAlkaliSuggestedNote" class="text-xs text-gray-500 mb-1.5"></p>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+    <tr class="bg-green-100">
+        <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 40%;" data-i18n="item">項目</th>
+        <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="recipeGl">配方 (g/l)</th>
+        <th class="border border-gray-300 px-2 sm:px-3 py-2 text-left" style="width: 30%;" data-i18n="quantity">用量 (g)</th>
+    </tr>
+</thead>
+                            <tbody id="woAlkaliTable">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="woPretreatmentSection" class="hidden mt-5 pt-4" style="border-top:1px solid #e5e7eb;">
+                    <h3 class="font-bold text-base mb-2 text-gray-700"><span data-i18n="woPretreatmentLabel">前處理:</span> <span id="woPretreatmentMethodName"></span></h3>
+                    <div id="woPretreatmentContent"></div>
+                </div>
+
+                <div id="woWashingSection" class="hidden mt-5 pt-4" style="border-top:1px solid #e5e7eb;">
+                    <h3 class="font-bold text-base mb-2 text-gray-700"><span data-i18n="woWashingLabel">水洗:</span> <span id="woWashingMethodName"></span></h3>
+                    <div id="woWashingContent"></div>
+                </div>
+
+                <div id="woResultSection" class="hidden mt-5 pt-4" style="border-top:1px solid #e5e7eb;">
+                    <h3 class="font-bold text-base mb-2 text-gray-700" data-i18n="dyeResultSection">染色結果記錄</h3>
+                    <div id="woResultPhotosGrid" class="grid grid-cols-3 gap-3 mb-3"></div>
+                    <p id="woResultNotes" class="text-sm text-gray-700"></p>
+                </div>
+            </div>
+            </div>
+
+            <div id="resultTabPanel" class="hidden">
+                <div id="resultCardPrompt" class="section-card text-center py-10 mt-5 sm:mt-6 bg-amber-50 border-2 border-amber-300 border-dashed">
+                    <svg class="w-10 h-10 text-amber-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <p class="text-amber-800 font-semibold" data-i18n="cardTabPrompt">請先在「配方設定」分頁填寫「總布量」與「軋吸率」,才會顯示工卡內容</p>
+                </div>
+                <div id="resultSection" class="hidden section-card p-6 mt-5 sm:mt-6">
+                    <h2 class="text-base sm:text-xl font-bold text-gray-800 flex items-center gap-2 mb-4">
+                        <span class="w-1.5 h-6 bg-purple-500 rounded-full print:hidden hidden sm:inline-block"></span>
+                        <span data-i18n="dyeResultSection">染色結果記錄</span>
+                    </h2>
+
+                    <div id="resultPhotoButtons" class="flex flex-wrap gap-3 mb-4 print:hidden">
+                        <label class="cursor-pointer px-4 py-2.5 bg-purple-600 text-white text-sm font-semibold rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span data-i18n="takePhoto">拍照</span>
+                            <input type="file" accept="image/*" capture="environment" class="hidden" onchange="handleResultPhotoInput(event)">
+                        </label>
+                        <label class="cursor-pointer px-4 py-2.5 bg-purple-50 text-purple-700 text-sm font-semibold rounded-lg hover:bg-purple-100 transition-colors flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                            </svg>
+                            <span data-i18n="uploadPhoto">上傳照片</span>
+                            <input type="file" accept="image/*" multiple class="hidden" onchange="handleResultPhotoInput(event)">
+                        </label>
+                    </div>
+
+                    <div id="resultPhotosGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5"></div>
+
+                    <label id="dyeResultLabel" class="input-label" data-i18n="dyeResultLabel">染色結果總結</label>
+                    <textarea id="dyeResultNotes" rows="4" data-i18n-placeholder="dyeResultPlaceholder" placeholder="記錄染色結果、色差、備註..." oninput="renderWorkOrderResult(); updatePrintPageBreaks();" class="w-full input-field bg-white"></textarea>
+                </div>
+            </div>
+
+            <div class="mt-5 sm:mt-6 pt-4 border-t border-gray-200 print:hidden flex items-center justify-between">
+                <span class="text-xs text-gray-300">v1.25.0</span>
+                <a href="https://everlight-ccbu.com/" target="_blank" rel="noopener" class="text-xs text-gray-400 hover:text-blue-500 transition-colors">everlight-ccbu.com</a>
+            </div>
+        </div>
+    </main>
+
+    <div id="saveImageModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-80 flex flex-col items-center justify-center p-4">
+        <p class="text-white text-center font-semibold mb-3 px-4" data-i18n="saveImageInstruction">長按下方圖片,選擇「儲存圖片」即可儲存到手機相簿</p>
+        <img id="saveImageModalImg" class="max-w-full max-h-[70vh] rounded-lg shadow-2xl" alt="CPB Work Order">
+        <button onclick="closeSaveImageModal()" class="mt-4 px-6 py-2.5 bg-white text-gray-800 font-semibold rounded-lg" data-i18n="closeButton">關閉</button>
+    </div>
+
+    <div id="photoLightbox" class="hidden fixed inset-0 z-50 bg-black bg-opacity-90 flex flex-col items-center justify-center p-4" onclick="closePhotoLightbox()">
+        <img id="photoLightboxImg" class="max-w-full max-h-[85vh] rounded-lg" alt="">
+        <button onclick="closePhotoLightbox()" class="mt-4 px-6 py-2.5 bg-white text-gray-800 font-semibold rounded-lg" data-i18n="closeButton">關閉</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+</body>
+</html>
