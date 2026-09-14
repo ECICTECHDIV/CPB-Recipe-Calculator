@@ -1,41 +1,30 @@
-// 版本号:以后更新 index.html 内容时,把这个字符串改成新的日期/版本号(例如 'cpb-cache-v3'),
-// 手机上的旧快取才会被换掉、抓到新版本。不改版本号的话,使用者可能会一直看到旧版画面。
-const CACHE_NAME = 'cpb-cache-v67';
-
-// 只预先快取「自己网域下」的档案。外部 CDN 脚本(tailwind、html2canvas)不放进这里预先抓取——
-// no-cors 模式抓回来的是「不透明回应」,连状态码都读不到,没办法确认真的抓成功还是抓到错误页,
-// 万一悄悄快取到一个坏掉的版本,会连带让「下載工單」这类依赖 html2canvas 的功能不会有任何
-// 错误讯息、直接失效,却很难查出原因。改成让它们照浏览器原本的方式在真正用到时抓取、
-// 交给下面的 fetch 事件顺手快取,风险小很多。
-const APP_SHELL = [
-  './',
-  './index.html',
-  './data.js',
-  './app.js',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
+// 浸染試染工具 — Service Worker
+// 策略：網路優先（online 時一定抓最新版本），只有離線時才退回使用快取。
+// 這樣現場有網路時更新 index.html，重新整理就能看到新版；真的沒網路時仍可用舊版開啟。
+// 技術手冊已搬到「染整工具箱」入口頁，這裡不再快取PDF檔案。
+const CACHE_NAME = "dye-work-order-v8";
+const CORE_ASSETS = [
+  "./index.html",
+  "./data.js",
+  "./app.js",
+  "./manifest.json",
+  "./icon-192.png",
+  "./icon-512.png"
 ];
 
-// 安装阶段:把工具本身的檔案先存一份进手机的快取,离线时才有东西可以用
-self.addEventListener('install', (event) => {
+// iPhone 拍照存結果照片時，app.js 會動態載入這個 HEIC 轉檔函式庫。
+// 網址是釘死版本號的（@0.0.4），內容不會變，所以一旦成功抓過一次、快取起來，
+// 之後離線也能用，不用每次都連網才能存 HEIC 照片。
+const HEIC2ANY_URL = "https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return Promise.all(
-        APP_SHELL.map((url) =>
-          cache.add(url).catch((err) => {
-            // 单一资源快取失败不该让整个安装失败
-            console.warn('Service worker: failed to cache', url, err);
-          })
-        )
-      );
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_ASSETS))
   );
-  self.skipWaiting();
+  self.skipWaiting(); // 新版本安裝好立刻接手，不用等所有分頁都關掉
 });
 
-// 启用阶段:清掉旧版本留下的快取,避免占用空间、也避免读到过期档案
-self.addEventListener('activate', (event) => {
+self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(
@@ -46,32 +35,25 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 请求拦截:快取优先(cache-first)——先看手机里有没有存过,有的话直接用(离线也能开),
-// 没有的话才去网路上抓,抓到了顺便存一份起来,下次离线也能用
-self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  // 只接管自己網域的檔案，加上 heic2any 這個特例（版本釘死、值得離線快取）；
+  // 其他外部 CDN（例如 html2canvas）交給瀏覽器自己的 HTTP 快取處理，不在這裡攔截
+  let sameOrigin = false;
+  try { sameOrigin = new URL(req.url).origin === self.location.origin; } catch (e) {}
+  if (!sameOrigin && req.url !== HEIC2ANY_URL) return;
 
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-
-      return fetch(event.request)
-        .then((response) => {
-          // 只快取「有效回应」,避免把错误页面也存进去
-          const shouldCache = response && (response.status === 200 || response.type === 'opaque');
-          if (shouldCache) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
-          }
-          return response;
-        })
-        .catch(() => {
-          // 离线且快取里也没有的情况(例如第一次开就没网路):
-          // 至少把 index.html 挡回去,而不是整个白屏
-          if (event.request.mode === 'navigate') {
-            return caches.match('./index.html');
-          }
-        });
-    })
+    fetch(req)
+      .then((res) => {
+        if (res && res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
+        }
+        return res;
+      })
+      .catch(() => caches.match(req)) // 離線時才退回用快取
   );
 });
