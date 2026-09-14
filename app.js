@@ -8,6 +8,8 @@
         let currentLang = 'zh';
         let loadedRecipeName = '';
         let resultPhotos = [];
+        const RESULT_PHOTO_MAX_DIM = 800; // 最長邊壓縮到 800px 內，兼顧清晰度與檔案大小
+        const RESULT_PHOTO_QUALITY = 0.6; // JPEG 壓縮品質
         function makeDefaultRecipeRows(n) {
             return Array.from({ length: n }, () => ({ name: '', value: '' }));
         }
@@ -220,34 +222,89 @@
             location.reload();
         }
 
-        function handleResultPhotoInput(event) {
+        // iPhone 相機預設拍出來是 HEIC 格式，瀏覽器完全無法直接解碼（Android 的 JPEG 沒有這個問題）。
+        // 用 heic2any 這個函式庫做轉檔，但它體積不小，所以不寫死在 <script src>，只在真的遇到
+        // HEIC 檔案時才動態載入，Android 使用者完全不會載到這段東西。
+        let heic2anyLoadPromise = null;
+        function loadHeic2Any() {
+            if (window.heic2any) return Promise.resolve();
+            if (heic2anyLoadPromise) return heic2anyLoadPromise;
+            heic2anyLoadPromise = new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js';
+                script.onload = () => resolve();
+                script.onerror = () => reject(new Error('heic2any load failed'));
+                document.head.appendChild(script);
+            });
+            return heic2anyLoadPromise;
+        }
+        // file.type 在部分 iOS Safari 版本上對 HEIC 檔案會回傳空字串，所以副檔名也要一併檢查
+        function isHeicFile(file) {
+            const type = (file.type || '').toLowerCase();
+            if (type === 'image/heic' || type === 'image/heif') return true;
+            return /\.(heic|heif)$/i.test(file.name || '');
+        }
+
+        async function handleResultPhotoInput(event) {
             const files = Array.from(event.target.files || []);
             event.target.value = '';
-            files.forEach(file => {
-                if (!file.type || !file.type.startsWith('image/')) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let { width, height } = img;
-                        if (width > height && width > RESULT_PHOTO_MAX_DIM) {
-                            height = Math.round(height * RESULT_PHOTO_MAX_DIM / width);
-                            width = RESULT_PHOTO_MAX_DIM;
-                        } else if (height > RESULT_PHOTO_MAX_DIM) {
-                            width = Math.round(width * RESULT_PHOTO_MAX_DIM / height);
-                            height = RESULT_PHOTO_MAX_DIM;
-                        }
-                        canvas.width = width;
-                        canvas.height = height;
-                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        resultPhotos.push({ src: canvas.toDataURL('image/jpeg', RESULT_PHOTO_QUALITY), caption: '' });
-                        renderResultPhotosGrid();
+
+            for (const file of files) {
+                const heic = isHeicFile(file);
+                if (!heic && file.type && !file.type.startsWith('image/')) continue;
+
+                let workingFile = file;
+                if (heic) {
+                    try {
+                        await loadHeic2Any();
+                        const converted = await window.heic2any({ blob: file, toType: 'image/jpeg', quality: 0.85 });
+                        workingFile = Array.isArray(converted) ? converted[0] : converted;
+                    } catch (err) {
+                        console.error('HEIC 轉檔失敗：', err);
+                        alert(currentLang === 'zh'
+                            ? '這張照片是 iPhone 的 HEIC 格式，轉檔失敗。請重試一次，或到 iPhone「設定 → 相機 → 格式」改成「最相容」。'
+                            : "This photo is in iPhone's HEIC format and the conversion failed. Please try again, or switch your iPhone's Camera format to \"Most Compatible\" under Settings → Camera → Formats.");
+                        continue;
+                    }
+                }
+
+                await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let { width, height } = img;
+                            if (width > height && width > RESULT_PHOTO_MAX_DIM) {
+                                height = Math.round(height * RESULT_PHOTO_MAX_DIM / width);
+                                width = RESULT_PHOTO_MAX_DIM;
+                            } else if (height > RESULT_PHOTO_MAX_DIM) {
+                                width = Math.round(width * RESULT_PHOTO_MAX_DIM / height);
+                                height = RESULT_PHOTO_MAX_DIM;
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                            resultPhotos.push({ src: canvas.toDataURL('image/jpeg', RESULT_PHOTO_QUALITY), caption: '' });
+                            renderResultPhotosGrid();
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            console.error('圖片解碼失敗：', workingFile && workingFile.name);
+                            alert(currentLang === 'zh'
+                                ? '這張照片無法讀取，請換一張照片或重新拍攝。'
+                                : "This photo couldn't be read. Please try a different photo or take a new one.");
+                            resolve();
+                        };
+                        img.src = e.target.result;
                     };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(file);
-            });
+                    reader.onerror = () => {
+                        console.error('檔案讀取失敗：', workingFile && workingFile.name);
+                        resolve();
+                    };
+                    reader.readAsDataURL(workingFile);
+                });
+            }
         }
 
         function renderResultPhotosGrid() {

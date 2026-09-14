@@ -1,6 +1,6 @@
 // 版本号:以后更新 index.html 内容时,把这个字符串改成新的日期/版本号(例如 'cpb-cache-v3'),
 // 手机上的旧快取才会被换掉、抓到新版本。不改版本号的话,使用者可能会一直看到旧版画面。
-const CACHE_NAME = 'cpb-cache-v66';
+const CACHE_NAME = 'cpb-cache-v67';
 
 // 只预先快取「自己网域下」的档案。外部 CDN 脚本(tailwind、html2canvas)不放进这里预先抓取——
 // no-cors 模式抓回来的是「不透明回应」,连状态码都读不到,没办法确认真的抓成功还是抓到错误页,
