@@ -64,7 +64,8 @@
         header.top .head-actions .lang-seg-wrap .lang-seg-btn + .lang-seg-btn { border-left: 1.5px solid var(--blue); }
         header.top .head-actions .lang-seg-wrap .lang-seg-btn.active { background: var(--blue); color: #fff; }
         
-        .top-bar-label { display: block; font-size: .82rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 4px; }
+        .top-bar-label { display: none; font-size: .82rem; font-weight: 600; color: var(--ink-muted); margin-bottom: 4px; }
+        @media (min-width:640px){ .top-bar-label{ display:block; } }
         .top-bar-slim { padding: 1rem 1rem 0; margin-bottom: 1.25rem; }
         @media (min-width: 640px) { .top-bar-slim { padding: 1.5rem 1.5rem 0; margin-bottom: 1.5rem; } }
         .top-bar-slim .shell { padding: 12px 14px; background: var(--paper); border: 1px solid var(--border); border-radius: var(--radius-lg); }
